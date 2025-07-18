@@ -72,6 +72,9 @@ public class PacketCodec {
      * <p>
      * This will return a null value when a packet is not available to be read yet. Consider calling this within a
      * scheduled task or a while loop.
+     *
+     * @return The {@link Packet} if it could be read, or null if the read function was unable to complete reading the
+     * incoming data. This usually occurs when the socket is closed by the other party.
      */
     public @Nullable Packet read() throws IOException {
         // We can attempt to read the header into the header buffer. If that does not get read fully, there's nothing we

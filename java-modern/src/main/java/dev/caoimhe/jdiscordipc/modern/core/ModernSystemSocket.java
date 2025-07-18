@@ -40,7 +40,9 @@ public class ModernSystemSocket implements SystemSocket {
                 return false;
             }
 
-            this.socketChannel.read(byteBuffer);
+            if (this.socketChannel.read(byteBuffer) == -1) {
+                return false;
+            }
         }
 
         byteBuffer.position(0);
