@@ -4,13 +4,17 @@ import dev.caoimhe.jdiscordipc.core.SystemSocket;
 import dev.caoimhe.jdiscordipc.core.codec.PacketCodec;
 import dev.caoimhe.jdiscordipc.core.packet.Packet;
 import dev.caoimhe.jdiscordipc.core.packet.impl.HandshakePacket;
+import dev.caoimhe.jdiscordipc.core.packet.impl.frame.DispatchEventPacket;
+import dev.caoimhe.jdiscordipc.event.DiscordEventListener;
 import dev.caoimhe.jdiscordipc.exception.DiscordClientUnavailableException;
+import dev.caoimhe.jdiscordipc.model.event.Event;
 import dev.caoimhe.jdiscordipc.util.SystemUtil;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -23,6 +27,7 @@ import java.util.concurrent.ExecutorService;
 public class JDiscordIPC {
     private final long clientId;
     private final ExecutorService executorService;
+    private final List<DiscordEventListener> eventListeners;
     private final PacketCodec packetCodec;
     private final SystemSocket systemSocket;
 
@@ -38,13 +43,16 @@ public class JDiscordIPC {
     public JDiscordIPC(final long clientId, final ExecutorService executorService, final SystemSocket systemSocket) {
         this.clientId = clientId;
         this.executorService = executorService;
+        this.eventListeners = new ArrayList<>();
         this.packetCodec = PacketCodec.from(systemSocket);
         this.systemSocket = systemSocket;
     }
 
     /**
      * Connects to the running Discord application through the {@link SystemSocket} provided during initialization.
-     * This method will block until the connection is initiated, but not until it is ready.
+     * This method will block until the connection is initiated, but not until it is ready (see {@link dev.caoimhe.jdiscordipc.model.event.ReadyEvent}).
+     *
+     * @throws DiscordClientUnavailableException When the connection could not be initiated.
      */
     public void connect() throws DiscordClientUnavailableException {
         final Path discordIpcPath = this.getIpcFilePath();
@@ -62,8 +70,20 @@ public class JDiscordIPC {
         try {
             this.packetCodec.write(new HandshakePacket(this.clientId));
         } catch (final IOException e) {
-            System.err.println("Failed to write packet to socket: " + e);
+            throw new DiscordClientUnavailableException(e);
         }
+    }
+
+    /**
+     * Registers an event listener with this {@link JDiscordIPC} instance.
+     * <p>
+     * In order to ensure that your listener receives all events, this should be called before {@link #connect}.
+     * Otherwise, events like {@link dev.caoimhe.jdiscordipc.model.event.ReadyEvent} may be missed.
+     *
+     * @param listener The event listener instance to register.
+     */
+    public void registerEventListener(final DiscordEventListener listener) {
+        this.eventListeners.add(listener);
     }
 
     /**
@@ -71,11 +91,39 @@ public class JDiscordIPC {
      */
     private void readPackets() {
         while (this.systemSocket.isConnected()) {
+            final Packet packet;
             try {
-                final Packet packet = this.packetCodec.read();
-                System.out.println(packet);
+                packet = this.packetCodec.read();
             } catch (final Exception e) {
                 System.err.println("Failed to read packet: " + e);
+                continue;
+            }
+
+            // If a packet could not be read, it's likely that we're not ready to read yet.
+            if (packet == null) continue;
+
+            try {
+                this.handlePacket(packet);
+            } catch (final Exception e) {
+                System.err.println("Failed to handle packet: " + e);
+            }
+        }
+    }
+
+    /**
+     * Handles an incoming packet from the Discord client.
+     *
+     * @param packet The packet to handle.
+     * @see #readPackets
+     */
+    private void handlePacket(final Packet packet) {
+        if (packet instanceof DispatchEventPacket) {
+            final Event event = ((DispatchEventPacket) packet).data();
+
+            try {
+                this.eventListeners.forEach(it -> it.onEvent(event));
+            } catch (final Exception e) {
+                System.err.println("Failed to dispatch event to event listeners: " + e);
             }
         }
     }
