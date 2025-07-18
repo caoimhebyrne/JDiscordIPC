@@ -1,14 +1,10 @@
 package dev.caoimhe.jdiscordipc.builder;
 
 import dev.caoimhe.jdiscordipc.JDiscordIPC;
-import dev.caoimhe.jdiscordipc.core.SystemSocket;
+import dev.caoimhe.jdiscordipc.ReconnectPolicy;
 import dev.caoimhe.jdiscordipc.core.SystemSocketFactory;
 import dev.caoimhe.jdiscordipc.exception.JDiscordIPCBuilderException;
 import org.jspecify.annotations.Nullable;
-
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * A builder for {@link JDiscordIPC} instances.
@@ -22,20 +18,20 @@ public class JDiscordIPCBuilder {
     private final long clientId;
 
     /**
+     * The {@link ReconnectPolicy} that should be used when the Discord client terminates the connection.
+     */
+    private ReconnectPolicy reconnectPolicy;
+
+    /**
      * The {@link SystemSocketFactory} implementation to use when building the {@link JDiscordIPC} instance.
      *
      * @see #systemSocketFactory(SystemSocketFactory)
      */
     private @Nullable SystemSocketFactory systemSocketFactory;
 
-    /**
-     * The {@link ExecutorService} to use for starting background tasks, e.g. reading from the {@link SystemSocket}.
-     */
-    private ExecutorService executorService;
-
     private JDiscordIPCBuilder(final long clientId) {
         this.clientId = clientId;
-        this.executorService = Executors.newCachedThreadPool();
+        this.reconnectPolicy = ReconnectPolicy.NEVER;
         this.systemSocketFactory = null;
     }
 
@@ -49,10 +45,10 @@ public class JDiscordIPCBuilder {
     }
 
     /**
-     * Sets the {@link Executor} implementation to use when starting background tasks.
+     * Sets the {@link ReconnectPolicy} that should be used when the Discord client terminates the connection.
      */
-    public JDiscordIPCBuilder executorService(final ExecutorService executorService) {
-        this.executorService = executorService;
+    public JDiscordIPCBuilder reconnectPolicy(final ReconnectPolicy reconnectPolicy) {
+        this.reconnectPolicy = reconnectPolicy;
         return this;
     }
 
@@ -78,6 +74,6 @@ public class JDiscordIPCBuilder {
             throw new JDiscordIPCBuilderException.MissingSystemSocketFactoryException();
         }
 
-        return new JDiscordIPC(this.clientId, this.executorService, this.systemSocketFactory.createSystemSocket());
+        return new JDiscordIPC(this.clientId, this.reconnectPolicy, this.systemSocketFactory.createSystemSocket());
     }
 }

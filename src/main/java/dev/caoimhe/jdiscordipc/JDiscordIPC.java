@@ -9,6 +9,7 @@ import dev.caoimhe.jdiscordipc.event.DiscordEventListener;
 import dev.caoimhe.jdiscordipc.exception.JDiscordIPCException;
 import dev.caoimhe.jdiscordipc.model.event.Event;
 import dev.caoimhe.jdiscordipc.util.SystemUtil;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,6 +17,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * The main entrypoint for JDiscordIPC.
@@ -25,25 +28,31 @@ import java.util.concurrent.ExecutorService;
  * @see dev.caoimhe.jdiscordipc.builder.JDiscordIPCBuilder
  */
 public class JDiscordIPC {
+    private @Nullable Thread backgroundThread;
+
     private final long clientId;
-    private final ExecutorService executorService;
     private final List<DiscordEventListener> eventListeners;
     private final PacketCodec packetCodec;
+    private final ReconnectPolicy reconnectPolicy;
     private final SystemSocket systemSocket;
 
     /**
      * Initializes a new {@link JDiscordIPC} instance.
      *
      * @param clientId        The client ID to use when communicating with Discord.
-     * @param executorService The executor service to use to start background tasks, e.g. reading from the socket.
+     * @param reconnectPolicy How this instance should behave when the Discord client terminates the connection.
      * @param systemSocket    The system socket to read messages from and send messages to.
      * @see dev.caoimhe.jdiscordipc.builder.JDiscordIPCBuilder
      */
-    public JDiscordIPC(final long clientId, final ExecutorService executorService, final SystemSocket systemSocket) {
+    public JDiscordIPC(
+        final long clientId,
+        final ReconnectPolicy reconnectPolicy,
+        final SystemSocket systemSocket
+    ) {
         this.clientId = clientId;
-        this.executorService = executorService;
         this.eventListeners = new ArrayList<>();
         this.packetCodec = PacketCodec.from(systemSocket);
+        this.reconnectPolicy = reconnectPolicy;
         this.systemSocket = systemSocket;
     }
 
@@ -62,8 +71,15 @@ public class JDiscordIPC {
             throw new JDiscordIPCException.DiscordClientUnavailableException(e);
         }
 
+        // If an existing thread is already running, let's get rid of it and start a new one.
+        if (this.backgroundThread != null) {
+            this.backgroundThread.interrupt();
+        }
+
         // Now that we've connected, we can start a background task to start consuming messages from Discord.
-        this.executorService.execute(this::readPackets);
+        this.backgroundThread = new Thread(this::readPackets, "JDiscordIPC-Packet-Reading");
+        this.backgroundThread.setDaemon(false);
+        this.backgroundThread.start();
 
         // To mark the connection as ready, we must send a handshake to the client containing our client ID.
         try {
@@ -90,6 +106,11 @@ public class JDiscordIPC {
      */
     private void readPackets() {
         while (this.systemSocket.isConnected()) {
+            // If the current thread has been interrupted, we can just return immediately.
+            if (Thread.currentThread().isInterrupted()) {
+                return;
+            }
+
             final Packet packet;
             try {
                 packet = this.packetCodec.read();
@@ -98,13 +119,31 @@ public class JDiscordIPC {
                 continue;
             }
 
-            // If a packet could not be read, it's likely that we're not ready to read yet.
-            if (packet == null) continue;
+            // If a null value is returned, the socket was closed by the other side, we should handle this gracefully.
+            if (packet == null) {
+                break;
+            }
 
             try {
                 this.handlePacket(packet);
             } catch (final Exception e) {
                 System.err.println("Failed to handle packet: " + e);
+            }
+        }
+
+        // If the while loop ends, we have been disconnected from the client.
+        this.handleDisconnect();
+    }
+
+    /**
+     * Called when the Discord client terminates the connection (either gracefully or forcefully).
+     */
+    private void handleDisconnect() {
+        if (this.reconnectPolicy == ReconnectPolicy.NEVER) {
+            System.out.println("The Discord client terminated the connection. Not attempting to reconnect as the reconnect policy is set to never.");
+
+            if (this.backgroundThread != null) {
+                this.backgroundThread.interrupt();
             }
         }
     }
