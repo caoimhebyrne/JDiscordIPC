@@ -2,9 +2,9 @@ package dev.caoimhe.jdiscordipc.core.codec;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import dev.caoimhe.jdiscordipc.core.SystemSocket;
 import dev.caoimhe.jdiscordipc.core.packet.Packet;
 import dev.caoimhe.jdiscordipc.core.packet.PacketOpcode;
@@ -53,6 +53,8 @@ public class PacketCodec {
         this.objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, true);
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES, true);
+        this.objectMapper.configure(JsonParser.Feature.INCLUDE_SOURCE_IN_LOCATION, true);
 
         this.readFunction = readFunction;
         this.writeFunction = writeFunction;
