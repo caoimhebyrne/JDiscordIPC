@@ -6,7 +6,7 @@ import dev.caoimhe.jdiscordipc.core.packet.Packet;
 import dev.caoimhe.jdiscordipc.core.packet.impl.HandshakePacket;
 import dev.caoimhe.jdiscordipc.core.packet.impl.frame.DispatchEventPacket;
 import dev.caoimhe.jdiscordipc.event.DiscordEventListener;
-import dev.caoimhe.jdiscordipc.exception.DiscordClientUnavailableException;
+import dev.caoimhe.jdiscordipc.exception.JDiscordIPCException;
 import dev.caoimhe.jdiscordipc.model.event.Event;
 import dev.caoimhe.jdiscordipc.util.SystemUtil;
 
@@ -34,10 +34,9 @@ public class JDiscordIPC {
     /**
      * Initializes a new {@link JDiscordIPC} instance.
      *
-     * @param clientId The client ID to use when communicating with Discord.
+     * @param clientId        The client ID to use when communicating with Discord.
      * @param executorService The executor service to use to start background tasks, e.g. reading from the socket.
-     * @param systemSocket The system socket to read messages from and send messages to.
-     *
+     * @param systemSocket    The system socket to read messages from and send messages to.
      * @see dev.caoimhe.jdiscordipc.builder.JDiscordIPCBuilder
      */
     public JDiscordIPC(final long clientId, final ExecutorService executorService, final SystemSocket systemSocket) {
@@ -52,15 +51,15 @@ public class JDiscordIPC {
      * Connects to the running Discord application through the {@link SystemSocket} provided during initialization.
      * This method will block until the connection is initiated, but not until it is ready (see {@link dev.caoimhe.jdiscordipc.model.event.ReadyEvent}).
      *
-     * @throws DiscordClientUnavailableException When the connection could not be initiated.
+     * @throws JDiscordIPCException.DiscordClientUnavailableException When the connection could not be initiated.
      */
-    public void connect() throws DiscordClientUnavailableException {
+    public void connect() throws JDiscordIPCException.DiscordClientUnavailableException {
         final Path discordIpcPath = this.getIpcFilePath();
 
         try {
             this.systemSocket.connect(discordIpcPath);
         } catch (final IOException e) {
-            throw new DiscordClientUnavailableException(e);
+            throw new JDiscordIPCException.DiscordClientUnavailableException(e);
         }
 
         // Now that we've connected, we can start a background task to start consuming messages from Discord.
@@ -70,7 +69,7 @@ public class JDiscordIPC {
         try {
             this.packetCodec.write(new HandshakePacket(this.clientId));
         } catch (final IOException e) {
-            throw new DiscordClientUnavailableException(e);
+            throw new JDiscordIPCException.DiscordClientUnavailableException(e);
         }
     }
 
@@ -131,9 +130,9 @@ public class JDiscordIPC {
     /**
      * Attempts to find a Unix Domain Socket File to connect to the Discord client.
      *
-     * @throws DiscordClientUnavailableException If a unix domain socket file could not be found.
+     * @throws JDiscordIPCException.DiscordClientUnavailableException If a unix domain socket file could not be found.
      */
-    private Path getIpcFilePath() throws DiscordClientUnavailableException {
+    private Path getIpcFilePath() throws JDiscordIPCException.DiscordClientUnavailableException {
         final Path temporaryDirectory = SystemUtil.getTemporaryDirectory();
 
         for (int i = 0; i <= 9; i++) {
@@ -143,6 +142,6 @@ public class JDiscordIPC {
             }
         }
 
-        throw new DiscordClientUnavailableException(null);
+        throw new JDiscordIPCException.DiscordClientUnavailableException(null);
     }
 }
