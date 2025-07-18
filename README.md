@@ -10,7 +10,13 @@ IPC protocol either through Java Sockets or junixsocket, depending on the platfo
 
 For more information about the Discord IPC protocol, check out [Discord's developer documentation](https://discord.com/developers/docs/intro).
 
+## Examples and Wiki
+
+TODO
+
 ## Using JDiscordIPC
+
+> **Note**: These artifacts are not published to any repositories yet!
 
 To use JDiscordIPC in your project, you need to add the core dependency:
 
