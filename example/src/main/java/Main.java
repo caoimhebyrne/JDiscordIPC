@@ -1,7 +1,7 @@
 import dev.caoimhe.jdiscordipc.JDiscordIPC;
 import dev.caoimhe.jdiscordipc.builder.JDiscordIPCBuilder;
 import dev.caoimhe.jdiscordipc.event.DiscordEventListener;
-import dev.caoimhe.jdiscordipc.exception.DiscordClientUnavailableException;
+import dev.caoimhe.jdiscordipc.exception.JDiscordIPCException;
 import dev.caoimhe.jdiscordipc.model.event.ReadyEvent;
 import dev.caoimhe.jdiscordipc.modern.core.ModernSystemSocketFactory;
 
@@ -20,7 +20,7 @@ public class Main {
 
         try {
             jDiscordIPC.connect();
-        } catch (final DiscordClientUnavailableException e) {
+        } catch (final JDiscordIPCException.DiscordClientUnavailableException e) {
             System.err.println("Failed to connect to a Discord client. Is the discord application open?");
         }
     }

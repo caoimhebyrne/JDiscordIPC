@@ -3,7 +3,7 @@ package dev.caoimhe.jdiscordipc.builder;
 import dev.caoimhe.jdiscordipc.JDiscordIPC;
 import dev.caoimhe.jdiscordipc.core.SystemSocket;
 import dev.caoimhe.jdiscordipc.core.SystemSocketFactory;
-import dev.caoimhe.jdiscordipc.exception.MissingSystemSocketFactoryException;
+import dev.caoimhe.jdiscordipc.exception.JDiscordIPCBuilderException;
 import org.jspecify.annotations.Nullable;
 
 import java.util.concurrent.Executor;
@@ -13,7 +13,7 @@ import java.util.concurrent.Executors;
 /**
  * A builder for {@link JDiscordIPC} instances.
  *
- * @see JDiscordIPCBuilder#of
+ * @see #of
  */
 public class JDiscordIPCBuilder {
     /**
@@ -24,7 +24,7 @@ public class JDiscordIPCBuilder {
     /**
      * The {@link SystemSocketFactory} implementation to use when building the {@link JDiscordIPC} instance.
      *
-     * @see JDiscordIPCBuilder#systemSocketFactory(SystemSocketFactory)
+     * @see #systemSocketFactory(SystemSocketFactory)
      */
     private @Nullable SystemSocketFactory systemSocketFactory;
 
@@ -70,12 +70,12 @@ public class JDiscordIPCBuilder {
      * Constructs a {@link JDiscordIPC} instance from this builder.
      * This does not connect to the Discord socket yet, call {@link JDiscordIPC#connect} to initialize the connection.
      *
-     * @throws MissingSystemSocketFactoryException If {@link JDiscordIPCBuilder#systemSocketFactory(SystemSocketFactory)}
-     *                                             is not called.
+     * @throws JDiscordIPCBuilderException.MissingSystemSocketFactoryException If {@link #systemSocketFactory(SystemSocketFactory)}
+     *                                                                         is not called.
      */
     public JDiscordIPC build() {
         if (this.systemSocketFactory == null) {
-            throw new MissingSystemSocketFactoryException();
+            throw new JDiscordIPCBuilderException.MissingSystemSocketFactoryException();
         }
 
         return new JDiscordIPC(this.clientId, this.executorService, this.systemSocketFactory.createSystemSocket());
