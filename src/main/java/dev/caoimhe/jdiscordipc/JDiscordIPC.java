@@ -10,6 +10,7 @@ import dev.caoimhe.jdiscordipc.event.DiscordEventListener;
 import dev.caoimhe.jdiscordipc.exception.JDiscordIPCException;
 import dev.caoimhe.jdiscordipc.model.activity.Activity;
 import dev.caoimhe.jdiscordipc.model.event.Event;
+import dev.caoimhe.jdiscordipc.model.event.ReadyEvent;
 import dev.caoimhe.jdiscordipc.util.SystemUtil;
 import org.jspecify.annotations.Nullable;
 
@@ -26,8 +27,10 @@ import java.util.List;
  *
  * @see dev.caoimhe.jdiscordipc.builder.JDiscordIPCBuilder
  */
-public class JDiscordIPC {
+public class JDiscordIPC implements DiscordEventListener {
     private @Nullable Thread backgroundThread;
+    private @Nullable SetActivityRequestPacket queuedSetActivityRequestPacket;
+    private JDiscordIPCState state;
 
     private final long clientId;
     private final List<DiscordEventListener> eventListeners;
@@ -52,7 +55,10 @@ public class JDiscordIPC {
         this.eventListeners = new ArrayList<>();
         this.packetCodec = PacketCodec.from(systemSocket);
         this.reconnectPolicy = reconnectPolicy;
+        this.state = JDiscordIPCState.DISCONNECTED;
         this.systemSocket = systemSocket;
+
+        this.registerEventListener(this);
     }
 
     /**
@@ -62,28 +68,24 @@ public class JDiscordIPC {
      * @throws JDiscordIPCException.DiscordClientUnavailableException When the connection could not be initiated.
      */
     public void connect() throws JDiscordIPCException.DiscordClientUnavailableException {
-        final Path discordIpcPath = this.getIpcFilePath();
-
         try {
+            final Path discordIpcPath = this.getIpcFilePath();
             this.systemSocket.connect(discordIpcPath);
-        } catch (final IOException e) {
-            throw new JDiscordIPCException.DiscordClientUnavailableException(e);
-        }
 
-        // If an existing thread is already running, let's get rid of it and start a new one.
-        if (this.backgroundThread != null) {
-            this.backgroundThread.interrupt();
-        }
+            // If an existing thread is already running, let's get rid of it and start a new one.
+            if (this.backgroundThread != null) {
+                this.backgroundThread.interrupt();
+            }
 
-        // Now that we've connected, we can start a background task to start consuming messages from Discord.
-        this.backgroundThread = new Thread(this::readPackets, "JDiscordIPC-Packet-Reading");
-        this.backgroundThread.setDaemon(false);
-        this.backgroundThread.start();
+            // Now that we've connected, we can start a background task to start consuming messages from Discord.
+            this.backgroundThread = new Thread(this::readPackets, "JDiscordIPC-Packet-Reading");
+            this.backgroundThread.setDaemon(false);
+            this.backgroundThread.start();
 
-        // To mark the connection as ready, we must send a handshake to the client containing our client ID.
-        try {
+            // To mark the connection as ready, we must send a handshake to the client containing our client ID.
             this.packetCodec.write(new HandshakePacket(this.clientId));
         } catch (final IOException e) {
+            this.state = JDiscordIPCState.DISCONNECTED;
             throw new JDiscordIPCException.DiscordClientUnavailableException(e);
         }
     }
@@ -100,13 +102,21 @@ public class JDiscordIPC {
      * @see dev.caoimhe.jdiscordipc.model.activity.ActivityBuilder
      */
     public void updateActivity(final @Nullable Activity activity) {
+        final SetActivityRequestPacket packet = new SetActivityRequestPacket(new SetActivityRequestPacket.Arguments(
+            SystemUtil.getProcessId(),
+            activity
+        ));
+
+        // If the client is not currently connected, we can queue the activity to be set once a connection is ready.
+        if (this.state != JDiscordIPCState.READY) {
+            this.queuedSetActivityRequestPacket = packet;
+            return;
+        }
+
         try {
-            this.packetCodec.write(new SetActivityRequestPacket(new SetActivityRequestPacket.Arguments(
-                SystemUtil.getProcessId(),
-                activity
-            )));
-        } catch (final IOException ignored) {
-            // TODO: Handle exception.
+            this.packetCodec.write(packet);
+        } catch (final IOException e) {
+            // TODO
         }
     }
 
@@ -120,6 +130,21 @@ public class JDiscordIPC {
      */
     public void registerEventListener(final DiscordEventListener listener) {
         this.eventListeners.add(listener);
+    }
+
+    @Override
+    public void onReadyEvent(final ReadyEvent event) {
+        // When the Discord client informs us that it is ready for communication, we can set the state to ready.
+        this.state = JDiscordIPCState.READY;
+
+        // If an activity update is queued, we can inform the Discord client of that now.
+        if (this.queuedSetActivityRequestPacket != null) {
+            try {
+                this.packetCodec.write(this.queuedSetActivityRequestPacket);
+            } catch (final IOException e) {
+                // TODO
+            }
+        }
     }
 
     /**
@@ -160,6 +185,8 @@ public class JDiscordIPC {
      * Called when the Discord client terminates the connection (either gracefully or forcefully).
      */
     private void handleDisconnect() {
+        this.state = JDiscordIPCState.DISCONNECTED;
+
         if (this.reconnectPolicy == ReconnectPolicy.NEVER) {
             System.out.println("The Discord client terminated the connection. Not attempting to reconnect as the reconnect policy is set to never.");
 
