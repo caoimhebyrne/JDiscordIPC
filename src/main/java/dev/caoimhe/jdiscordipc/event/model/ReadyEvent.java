@@ -2,9 +2,10 @@ package dev.caoimhe.jdiscordipc.event.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.caoimhe.jdiscordipc.packet.impl.HandshakePacket;
 
 /**
- * Received from the Discord client after it receives our {@link dev.caoimhe.jdiscordipc.core.packet.impl.HandshakePacket}.
+ * Received from the Discord client after it receives our {@link HandshakePacket}.
  */
 public class ReadyEvent implements Event {
     @JsonProperty("v")

@@ -2,7 +2,7 @@ package dev.caoimhe.jdiscordipc.builder;
 
 import dev.caoimhe.jdiscordipc.JDiscordIPC;
 import dev.caoimhe.jdiscordipc.ReconnectPolicy;
-import dev.caoimhe.jdiscordipc.core.SystemSocketFactory;
+import dev.caoimhe.jdiscordipc.socket.SystemSocketFactory;
 import dev.caoimhe.jdiscordipc.exception.JDiscordIPCBuilderException;
 import org.jspecify.annotations.Nullable;
 

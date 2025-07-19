@@ -2,7 +2,7 @@ import dev.caoimhe.jdiscordipc.JDiscordIPC;
 import dev.caoimhe.jdiscordipc.activity.model.Activity;
 import dev.caoimhe.jdiscordipc.activity.model.party.ActivityPartyPrivacy;
 import dev.caoimhe.jdiscordipc.exception.JDiscordIPCException;
-import dev.caoimhe.jdiscordipc.modern.core.ModernSystemSocketFactory;
+import dev.caoimhe.jdiscordipc.modern.socket.ModernSystemSocketFactory;
 
 public class Main {
     public static void main(final String[] args) {
