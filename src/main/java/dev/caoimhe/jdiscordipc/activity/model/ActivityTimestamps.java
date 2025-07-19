@@ -1,4 +1,4 @@
-package dev.caoimhe.jdiscordipc.model.activity;
+package dev.caoimhe.jdiscordipc.activity.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jspecify.annotations.Nullable;

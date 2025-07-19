@@ -1,16 +1,18 @@
 package dev.caoimhe.jdiscordipc;
 
+import dev.caoimhe.jdiscordipc.activity.ActivityManager;
+import dev.caoimhe.jdiscordipc.activity.model.ActivityBuilder;
 import dev.caoimhe.jdiscordipc.core.SystemSocket;
 import dev.caoimhe.jdiscordipc.core.codec.PacketCodec;
 import dev.caoimhe.jdiscordipc.core.packet.Packet;
 import dev.caoimhe.jdiscordipc.core.packet.impl.HandshakePacket;
+import dev.caoimhe.jdiscordipc.core.packet.impl.frame.OutgoingFramePacket;
 import dev.caoimhe.jdiscordipc.core.packet.impl.frame.incoming.DispatchEventPacket;
-import dev.caoimhe.jdiscordipc.core.packet.impl.frame.outgoing.SetActivityRequestPacket;
 import dev.caoimhe.jdiscordipc.event.DiscordEventListener;
 import dev.caoimhe.jdiscordipc.exception.JDiscordIPCException;
-import dev.caoimhe.jdiscordipc.model.activity.Activity;
-import dev.caoimhe.jdiscordipc.model.event.Event;
-import dev.caoimhe.jdiscordipc.model.event.ReadyEvent;
+import dev.caoimhe.jdiscordipc.activity.model.Activity;
+import dev.caoimhe.jdiscordipc.event.model.Event;
+import dev.caoimhe.jdiscordipc.event.model.ReadyEvent;
 import dev.caoimhe.jdiscordipc.util.SystemUtil;
 import org.jspecify.annotations.Nullable;
 
@@ -29,9 +31,9 @@ import java.util.List;
  */
 public class JDiscordIPC implements DiscordEventListener {
     private @Nullable Thread backgroundThread;
-    private @Nullable SetActivityRequestPacket queuedSetActivityRequestPacket;
     private JDiscordIPCState state;
 
+    private final ActivityManager activityManager;
     private final long clientId;
     private final List<DiscordEventListener> eventListeners;
     private final PacketCodec packetCodec;
@@ -52,23 +54,29 @@ public class JDiscordIPC implements DiscordEventListener {
         final SystemSocket systemSocket
     ) {
         this.clientId = clientId;
-        this.eventListeners = new ArrayList<>();
         this.packetCodec = PacketCodec.from(systemSocket);
         this.reconnectPolicy = reconnectPolicy;
         this.state = JDiscordIPCState.DISCONNECTED;
         this.systemSocket = systemSocket;
 
+        // The most important thing is that JDiscordIPC is the first event listener. Its state is important to other
+        // event listeners.
+        this.eventListeners = new ArrayList<>();
         this.registerEventListener(this);
+
+        this.activityManager = new ActivityManager(this);
     }
 
     /**
      * Connects to the running Discord application through the {@link SystemSocket} provided during initialization.
-     * This method will block until the connection is initiated, but not until it is ready (see {@link dev.caoimhe.jdiscordipc.model.event.ReadyEvent}).
+     * This method will block until the connection is initiated, but not until it is ready (see {@link ReadyEvent}).
      *
      * @throws JDiscordIPCException.DiscordClientUnavailableException When the connection could not be initiated.
      */
     public void connect() throws JDiscordIPCException.DiscordClientUnavailableException {
         try {
+            this.state = JDiscordIPCState.CONNECTING;
+
             final Path discordIpcPath = this.getIpcFilePath();
             this.systemSocket.connect(discordIpcPath);
 
@@ -93,38 +101,27 @@ public class JDiscordIPC implements DiscordEventListener {
     /**
      * Queues an activity update for the current user.
      * <p>
-     * If {@link #connect} has not been called, this will queue the {@link Activity} to be set once the Discord client
-     * has connected (i.e. once {@link dev.caoimhe.jdiscordipc.model.event.ReadyEvent} is dispatched).
+     * If {@link #connect} has not been called, the {@link ActivityManager} will queue the {@link Activity} to be set
+     * once the Discord client has connected (i.e. once {@link ReadyEvent} is dispatched).
+     * <p>
+     * If the Discord client reconnects after this method has been called, the user's activity will be reset to the
+     * latest {@link Activity} value passed to this function.
      *
      * @param activity The activity to set on the user's profile. If null, the current activity belonging to this
      *                 application instance will be removed from the user's profile
+     * @see ActivityManager#updateActivity(Activity)
      * @see Activity
-     * @see dev.caoimhe.jdiscordipc.model.activity.ActivityBuilder
+     * @see ActivityBuilder
      */
     public void updateActivity(final @Nullable Activity activity) {
-        final SetActivityRequestPacket packet = new SetActivityRequestPacket(new SetActivityRequestPacket.Arguments(
-            SystemUtil.getProcessId(),
-            activity
-        ));
-
-        // If the client is not currently connected, we can queue the activity to be set once a connection is ready.
-        if (this.state != JDiscordIPCState.READY) {
-            this.queuedSetActivityRequestPacket = packet;
-            return;
-        }
-
-        try {
-            this.packetCodec.write(packet);
-        } catch (final IOException e) {
-            // TODO
-        }
+        this.activityManager.updateActivity(activity);
     }
 
     /**
      * Registers an event listener with this {@link JDiscordIPC} instance.
      * <p>
      * In order to ensure that your listener receives all events, this should be called before {@link #connect}.
-     * Otherwise, events like {@link dev.caoimhe.jdiscordipc.model.event.ReadyEvent} may be missed.
+     * Otherwise, events like {@link ReadyEvent} may be missed.
      *
      * @param listener The event listener instance to register.
      */
@@ -132,19 +129,35 @@ public class JDiscordIPC implements DiscordEventListener {
         this.eventListeners.add(listener);
     }
 
+    /**
+     * Sends a {@link OutgoingFramePacket} to the Discord client if it is in the ready state.
+     * <p>
+     * If {@link #connect} has not been called, or, the Discord client has terminated the connection, this will not
+     * send anything.
+     */
+    public void sendPacket(final OutgoingFramePacket<?> packet) {
+        if (this.state != JDiscordIPCState.READY) {
+            return;
+        }
+
+        try {
+            this.packetCodec.write(packet);
+        } catch (IOException e) {
+            // TODO
+        }
+    }
+
+    /**
+     * Returns the current state of this {@link JDiscordIPC} instance.
+     */
+    public JDiscordIPCState state() {
+        return this.state;
+    }
+
     @Override
     public void onReadyEvent(final ReadyEvent event) {
         // When the Discord client informs us that it is ready for communication, we can set the state to ready.
         this.state = JDiscordIPCState.READY;
-
-        // If an activity update is queued, we can inform the Discord client of that now.
-        if (this.queuedSetActivityRequestPacket != null) {
-            try {
-                this.packetCodec.write(this.queuedSetActivityRequestPacket);
-            } catch (final IOException e) {
-                // TODO
-            }
-        }
     }
 
     /**

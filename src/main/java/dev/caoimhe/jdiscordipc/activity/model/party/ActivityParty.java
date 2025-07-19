@@ -1,6 +1,6 @@
-package dev.caoimhe.jdiscordipc.model.activity.party;
+package dev.caoimhe.jdiscordipc.activity.model.party;
 
-import dev.caoimhe.jdiscordipc.model.activity.Activity;
+import dev.caoimhe.jdiscordipc.activity.model.Activity;
 
 /**
  * A party within a {@link Activity}.

@@ -1,6 +1,4 @@
-package dev.caoimhe.jdiscordipc.model.activity.party;
-
-import org.jspecify.annotations.Nullable;
+package dev.caoimhe.jdiscordipc.activity.model.party;
 
 /**
  * Provides a builder for {@link ActivityParty} instances.

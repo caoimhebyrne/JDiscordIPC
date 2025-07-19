@@ -1,7 +1,7 @@
-package dev.caoimhe.jdiscordipc.model.activity;
+package dev.caoimhe.jdiscordipc.activity.model;
 
-import dev.caoimhe.jdiscordipc.model.activity.party.ActivityParty;
-import dev.caoimhe.jdiscordipc.model.activity.party.ActivityPartyBuilder;
+import dev.caoimhe.jdiscordipc.activity.model.party.ActivityParty;
+import dev.caoimhe.jdiscordipc.activity.model.party.ActivityPartyBuilder;
 import org.jspecify.annotations.Nullable;
 
 import java.util.function.Consumer;

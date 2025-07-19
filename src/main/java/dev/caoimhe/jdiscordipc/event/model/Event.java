@@ -1,4 +1,4 @@
-package dev.caoimhe.jdiscordipc.model.event;
+package dev.caoimhe.jdiscordipc.event.model;
 
 /**
  * A base class for all incoming events to implement.

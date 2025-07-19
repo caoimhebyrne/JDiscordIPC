@@ -1,8 +1,8 @@
 import dev.caoimhe.jdiscordipc.JDiscordIPC;
 import dev.caoimhe.jdiscordipc.builder.JDiscordIPCBuilder;
 import dev.caoimhe.jdiscordipc.exception.JDiscordIPCException;
-import dev.caoimhe.jdiscordipc.model.activity.Activity;
-import dev.caoimhe.jdiscordipc.model.activity.party.ActivityPartyPrivacy;
+import dev.caoimhe.jdiscordipc.activity.model.Activity;
+import dev.caoimhe.jdiscordipc.activity.model.party.ActivityPartyPrivacy;
 import dev.caoimhe.jdiscordipc.modern.core.ModernSystemSocketFactory;
 
 public class Main {
