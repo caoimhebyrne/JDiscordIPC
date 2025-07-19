@@ -1,7 +1,7 @@
 package dev.caoimhe.jdiscordipc.event;
 
-import dev.caoimhe.jdiscordipc.model.event.Event;
-import dev.caoimhe.jdiscordipc.model.event.ReadyEvent;
+import dev.caoimhe.jdiscordipc.event.model.Event;
+import dev.caoimhe.jdiscordipc.event.model.ReadyEvent;
 
 /**
  * An interface for all Discord event listeners to implement.

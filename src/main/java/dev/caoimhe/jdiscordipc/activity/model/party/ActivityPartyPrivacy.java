@@ -1,4 +1,4 @@
-package dev.caoimhe.jdiscordipc.model.activity.party;
+package dev.caoimhe.jdiscordipc.activity.model.party;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 

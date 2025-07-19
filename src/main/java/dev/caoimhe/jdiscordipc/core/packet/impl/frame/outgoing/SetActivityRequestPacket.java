@@ -2,7 +2,7 @@ package dev.caoimhe.jdiscordipc.core.packet.impl.frame.outgoing;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.caoimhe.jdiscordipc.core.packet.impl.frame.OutgoingFramePacket;
-import dev.caoimhe.jdiscordipc.model.activity.Activity;
+import dev.caoimhe.jdiscordipc.activity.model.Activity;
 import org.jspecify.annotations.Nullable;
 
 import java.util.UUID;

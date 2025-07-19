@@ -1,4 +1,4 @@
 @NullMarked
-package dev.caoimhe.jdiscordipc.model.activity.party;
+package dev.caoimhe.jdiscordipc.activity.model;
 
 import org.jspecify.annotations.NullMarked;

@@ -1,4 +1,4 @@
-package dev.caoimhe.jdiscordipc.model.event;
+package dev.caoimhe.jdiscordipc.event.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
