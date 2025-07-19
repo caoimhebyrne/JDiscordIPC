@@ -8,6 +8,8 @@ import dev.caoimhe.jdiscordipc.core.SystemSocket;
 import dev.caoimhe.jdiscordipc.core.codec.PacketCodec;
 import dev.caoimhe.jdiscordipc.core.packet.Packet;
 import dev.caoimhe.jdiscordipc.core.packet.impl.HandshakePacket;
+import dev.caoimhe.jdiscordipc.core.packet.impl.PingPacket;
+import dev.caoimhe.jdiscordipc.core.packet.impl.PongPacket;
 import dev.caoimhe.jdiscordipc.core.packet.impl.frame.OutgoingFramePacket;
 import dev.caoimhe.jdiscordipc.core.packet.impl.frame.incoming.DispatchEventPacket;
 import dev.caoimhe.jdiscordipc.event.DiscordEventListener;
@@ -22,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The main entrypoint for JDiscordIPC.
@@ -226,7 +229,14 @@ public class JDiscordIPC implements DiscordEventListener {
      * @see #readPackets
      */
     private void handlePacket(final Packet packet) {
-        if (packet instanceof DispatchEventPacket) {
+        if (packet instanceof PingPacket) {
+            try {
+                final Map<String, Object> properties = ((PingPacket) packet).properties();
+                this.packetCodec.write(new PongPacket(properties));
+            } catch (final IOException e) {
+                System.err.println("Failed to write pong packet: " + e);
+            }
+        } else if (packet instanceof DispatchEventPacket) {
             final Event event = ((DispatchEventPacket) packet).data();
 
             try {

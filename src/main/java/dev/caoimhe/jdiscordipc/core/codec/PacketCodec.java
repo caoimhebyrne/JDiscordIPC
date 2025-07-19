@@ -6,10 +6,13 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import dev.caoimhe.jdiscordipc.core.SystemSocket;
 import dev.caoimhe.jdiscordipc.core.packet.Packet;
 import dev.caoimhe.jdiscordipc.core.packet.PacketOpcode;
 import dev.caoimhe.jdiscordipc.core.packet.impl.ClosePacket;
+import dev.caoimhe.jdiscordipc.core.packet.impl.PingPacket;
+import dev.caoimhe.jdiscordipc.core.packet.impl.PongPacket;
 import dev.caoimhe.jdiscordipc.core.packet.impl.frame.IncomingFramePacket;
 import org.jspecify.annotations.Nullable;
 
@@ -56,6 +59,7 @@ public class PacketCodec {
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, true);
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES, true);
+        this.objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         this.objectMapper.configure(JsonParser.Feature.INCLUDE_SOURCE_IN_LOCATION, true);
 
         this.readFunction = readFunction;
@@ -113,6 +117,12 @@ public class PacketCodec {
 
             case CLOSE:
                 return this.objectMapper.readValue(payload, ClosePacket.class);
+
+            case PING:
+                return this.objectMapper.readValue(payload, PingPacket.class);
+
+            case PONG:
+                return this.objectMapper.readValue(payload, PongPacket.class);
 
             default:
                 throw new IllegalStateException("Unsupported packet opcode " + opcode);
