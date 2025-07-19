@@ -34,8 +34,8 @@ class Main {
             })
             .build();
 
-        // If an activity is set before JDiscordIPC is connected, it'll queue the activity to be set once a ready
-        // event is received from Discord.
+        // If an activity is set before JDiscordIPC is connected, it'll queue the activity to 
+        // be set once a ready event is received from Discord.
         jDiscordIPC.updateActivity(activity);
 
         try {
