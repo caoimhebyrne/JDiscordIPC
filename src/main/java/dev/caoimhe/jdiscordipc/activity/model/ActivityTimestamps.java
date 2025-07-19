@@ -1,5 +1,6 @@
 package dev.caoimhe.jdiscordipc.activity.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jspecify.annotations.Nullable;
 
@@ -53,5 +54,11 @@ public class ActivityTimestamps {
     public ActivityTimestamps(final long start, final @Nullable Long end) {
         this.start = start;
         this.end = end;
+    }
+
+    @JsonCreator
+    protected ActivityTimestamps(final @JsonProperty("start") long start) {
+        this.start = start;
+        this.end = null;
     }
 }
