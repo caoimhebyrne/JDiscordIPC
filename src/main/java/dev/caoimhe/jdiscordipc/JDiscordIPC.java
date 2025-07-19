@@ -1,7 +1,9 @@
 package dev.caoimhe.jdiscordipc;
 
 import dev.caoimhe.jdiscordipc.activity.ActivityManager;
+import dev.caoimhe.jdiscordipc.activity.model.Activity;
 import dev.caoimhe.jdiscordipc.activity.model.ActivityBuilder;
+import dev.caoimhe.jdiscordipc.builder.JDiscordIPCBuilder;
 import dev.caoimhe.jdiscordipc.core.SystemSocket;
 import dev.caoimhe.jdiscordipc.core.codec.PacketCodec;
 import dev.caoimhe.jdiscordipc.core.packet.Packet;
@@ -9,10 +11,9 @@ import dev.caoimhe.jdiscordipc.core.packet.impl.HandshakePacket;
 import dev.caoimhe.jdiscordipc.core.packet.impl.frame.OutgoingFramePacket;
 import dev.caoimhe.jdiscordipc.core.packet.impl.frame.incoming.DispatchEventPacket;
 import dev.caoimhe.jdiscordipc.event.DiscordEventListener;
-import dev.caoimhe.jdiscordipc.exception.JDiscordIPCException;
-import dev.caoimhe.jdiscordipc.activity.model.Activity;
 import dev.caoimhe.jdiscordipc.event.model.Event;
 import dev.caoimhe.jdiscordipc.event.model.ReadyEvent;
+import dev.caoimhe.jdiscordipc.exception.JDiscordIPCException;
 import dev.caoimhe.jdiscordipc.util.SystemUtil;
 import org.jspecify.annotations.Nullable;
 
@@ -158,6 +159,15 @@ public class JDiscordIPC implements DiscordEventListener {
     public void onReadyEvent(final ReadyEvent event) {
         // When the Discord client informs us that it is ready for communication, we can set the state to ready.
         this.state = JDiscordIPCState.READY;
+    }
+
+    /**
+     * Returns a {@link JDiscordIPCBuilder} instance to construct a {@link JDiscordIPC} with.
+     *
+     * @param clientId The client ID to use when communicating with Discord.
+     */
+    public static JDiscordIPCBuilder builder(final long clientId) {
+        return new JDiscordIPCBuilder(clientId);
     }
 
     /**

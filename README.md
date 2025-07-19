@@ -19,7 +19,7 @@ out [Discord's developer documentation](https://discord.com/developers/docs/intr
 ```java
 class Main {
     public static void main(final String[] args) {
-        final JDiscordIPC jDiscordIPC = JDiscordIPCBuilder.of(/* clientId */ 1234567891011121L)
+        final JDiscordIPC jDiscordIPC = JDiscordIPC.builder(/* clientId */)
             .systemSocketFactory(new ModernSystemSocketFactory())
             .build();
 
@@ -41,7 +41,7 @@ class Main {
         try {
             jDiscordIPC.connect();
         } catch (final JDiscordIPCException.DiscordClientUnavailableException e) {
-            System.err.println("Failed to connect to a Discord client. Is the discord application open?");
+            System.err.println("Failed to connect to a Discord client.");
         }
     }
 }

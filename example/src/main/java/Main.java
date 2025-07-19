@@ -7,7 +7,7 @@ import dev.caoimhe.jdiscordipc.modern.core.ModernSystemSocketFactory;
 
 public class Main {
     public static void main(final String[] args) {
-        final JDiscordIPC jDiscordIPC = JDiscordIPCBuilder.of(945428344806183003L)
+        final JDiscordIPC jDiscordIPC = JDiscordIPC.builder(945428344806183003L)
             .systemSocketFactory(new ModernSystemSocketFactory())
             .build();
 
