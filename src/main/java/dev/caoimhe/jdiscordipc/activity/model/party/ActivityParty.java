@@ -1,5 +1,7 @@
 package dev.caoimhe.jdiscordipc.activity.model.party;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.caoimhe.jdiscordipc.activity.model.Activity;
 
 /**
@@ -37,6 +39,13 @@ public class ActivityParty {
         this.id = id;
         this.size = new int[]{currentSize, maxSize};
         this.privacy = privacy;
+    }
+
+    @JsonCreator
+    protected ActivityParty(final @JsonProperty("id") String id, final @JsonProperty("size") int[] size) {
+        this.id = id;
+        this.size = size;
+        this.privacy = ActivityPartyPrivacy.PRIVATE;
     }
 
     /**

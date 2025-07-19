@@ -1,5 +1,6 @@
 package dev.caoimhe.jdiscordipc.activity.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.caoimhe.jdiscordipc.activity.model.party.ActivityParty;
 import org.jspecify.annotations.Nullable;
@@ -65,6 +66,11 @@ public class Activity {
         this.statusDisplayType = statusDisplayType;
         this.party = party;
         this.timestamps = timestamps;
+    }
+
+    @JsonCreator
+    protected Activity() {
+        this(ActivityType.PLAYING, null, null, null, null, null, null, null);
     }
 
     /**
