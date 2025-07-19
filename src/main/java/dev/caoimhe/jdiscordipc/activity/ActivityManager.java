@@ -2,11 +2,12 @@ package dev.caoimhe.jdiscordipc.activity;
 
 import dev.caoimhe.jdiscordipc.JDiscordIPC;
 import dev.caoimhe.jdiscordipc.JDiscordIPCState;
-import dev.caoimhe.jdiscordipc.activity.model.ActivityBuilder;
-import dev.caoimhe.jdiscordipc.packet.impl.frame.outgoing.SetActivityRequestPacket;
-import dev.caoimhe.jdiscordipc.event.DiscordEventListener;
 import dev.caoimhe.jdiscordipc.activity.model.Activity;
+import dev.caoimhe.jdiscordipc.activity.model.ActivityBuilder;
+import dev.caoimhe.jdiscordipc.event.DiscordEventListener;
 import dev.caoimhe.jdiscordipc.event.model.ReadyEvent;
+import dev.caoimhe.jdiscordipc.packet.PacketManager;
+import dev.caoimhe.jdiscordipc.packet.impl.frame.outgoing.SetActivityRequestPacket;
 import dev.caoimhe.jdiscordipc.util.SystemUtil;
 import org.jspecify.annotations.Nullable;
 
@@ -20,6 +21,11 @@ public class ActivityManager implements DiscordEventListener {
     private final JDiscordIPC jDiscordIPC;
 
     /**
+     * The {@link PacketManager} instance to use for sending packets.
+     */
+    private final PacketManager packetManager;
+
+    /**
      * The current user's latest activity state.
      * <p>
      * When {@link ReadyEvent} is emitted, this will be set. This ensures that {@link #updateActivity} calls can be
@@ -30,10 +36,12 @@ public class ActivityManager implements DiscordEventListener {
     /**
      * Initializes a new {@link ActivityManager} instance.
      *
-     * @param jDiscordIPC The {@link JDiscordIPC} instance that this manager is for.
+     * @param jDiscordIPC   The {@link JDiscordIPC} instance that this manager is for.
+     * @param packetManager The {@link PacketManager} instance to send packets with.
      */
-    public ActivityManager(final JDiscordIPC jDiscordIPC) {
+    public ActivityManager(final JDiscordIPC jDiscordIPC, final PacketManager packetManager) {
         this.currentActivity = null;
+        this.packetManager = packetManager;
 
         this.jDiscordIPC = jDiscordIPC;
         this.jDiscordIPC.registerEventListener(this);
@@ -72,7 +80,7 @@ public class ActivityManager implements DiscordEventListener {
      * Sends the activity for the current user as a packet to the Discord client.
      */
     private void sendActivityPacket() {
-        this.jDiscordIPC.sendPacket(new SetActivityRequestPacket(new SetActivityRequestPacket.Arguments(
+        this.packetManager.sendPacket(new SetActivityRequestPacket(new SetActivityRequestPacket.Arguments(
             SystemUtil.getProcessId(),
             this.currentActivity
         )));
