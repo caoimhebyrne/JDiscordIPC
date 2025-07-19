@@ -4,9 +4,11 @@ import dev.caoimhe.jdiscordipc.core.SystemSocket;
 import dev.caoimhe.jdiscordipc.core.codec.PacketCodec;
 import dev.caoimhe.jdiscordipc.core.packet.Packet;
 import dev.caoimhe.jdiscordipc.core.packet.impl.HandshakePacket;
-import dev.caoimhe.jdiscordipc.core.packet.impl.frame.DispatchEventPacket;
+import dev.caoimhe.jdiscordipc.core.packet.impl.frame.incoming.DispatchEventPacket;
+import dev.caoimhe.jdiscordipc.core.packet.impl.frame.outgoing.SetActivityRequestPacket;
 import dev.caoimhe.jdiscordipc.event.DiscordEventListener;
 import dev.caoimhe.jdiscordipc.exception.JDiscordIPCException;
+import dev.caoimhe.jdiscordipc.model.activity.Activity;
 import dev.caoimhe.jdiscordipc.model.event.Event;
 import dev.caoimhe.jdiscordipc.util.SystemUtil;
 import org.jspecify.annotations.Nullable;
@@ -16,9 +18,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 /**
  * The main entrypoint for JDiscordIPC.
@@ -86,6 +85,28 @@ public class JDiscordIPC {
             this.packetCodec.write(new HandshakePacket(this.clientId));
         } catch (final IOException e) {
             throw new JDiscordIPCException.DiscordClientUnavailableException(e);
+        }
+    }
+
+    /**
+     * Queues an activity update for the current user.
+     * <p>
+     * If {@link #connect} has not been called, this will queue the {@link Activity} to be set once the Discord client
+     * has connected (i.e. once {@link dev.caoimhe.jdiscordipc.model.event.ReadyEvent} is dispatched).
+     *
+     * @param activity The activity to set on the user's profile. If null, the current activity belonging to this
+     *                 application instance will be removed from the user's profile
+     * @see Activity
+     * @see dev.caoimhe.jdiscordipc.model.activity.ActivityBuilder
+     */
+    public void updateActivity(final @Nullable Activity activity) {
+        try {
+            this.packetCodec.write(new SetActivityRequestPacket(new SetActivityRequestPacket.Arguments(
+                SystemUtil.getProcessId(),
+                activity
+            )));
+        } catch (final IOException ignored) {
+            // TODO: Handle exception.
         }
     }
 
