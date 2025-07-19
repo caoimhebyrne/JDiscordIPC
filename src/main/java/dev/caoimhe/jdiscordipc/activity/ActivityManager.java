@@ -3,7 +3,7 @@ package dev.caoimhe.jdiscordipc.activity;
 import dev.caoimhe.jdiscordipc.JDiscordIPC;
 import dev.caoimhe.jdiscordipc.JDiscordIPCState;
 import dev.caoimhe.jdiscordipc.activity.model.ActivityBuilder;
-import dev.caoimhe.jdiscordipc.core.packet.impl.frame.outgoing.SetActivityRequestPacket;
+import dev.caoimhe.jdiscordipc.packet.impl.frame.outgoing.SetActivityRequestPacket;
 import dev.caoimhe.jdiscordipc.event.DiscordEventListener;
 import dev.caoimhe.jdiscordipc.activity.model.Activity;
 import dev.caoimhe.jdiscordipc.event.model.ReadyEvent;
