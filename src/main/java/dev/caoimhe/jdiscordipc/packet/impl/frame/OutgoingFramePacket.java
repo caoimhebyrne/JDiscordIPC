@@ -14,10 +14,9 @@ public class OutgoingFramePacket<A> extends FramePacket {
     /**
      * Initializes a new {@link OutgoingFramePacket}
      */
-    public OutgoingFramePacket(final String command, final A arguments, final @Nullable String uniqueId) {
+    public OutgoingFramePacket(final String command, final A arguments) {
         this.command = command;
         this.arguments = arguments;
-        this.uniqueId = uniqueId;
     }
 
     /**
