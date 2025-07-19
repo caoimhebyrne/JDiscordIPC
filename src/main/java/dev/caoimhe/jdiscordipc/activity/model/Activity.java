@@ -2,6 +2,7 @@ package dev.caoimhe.jdiscordipc.activity.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.caoimhe.jdiscordipc.activity.model.assets.ActivityAssets;
 import dev.caoimhe.jdiscordipc.activity.model.party.ActivityParty;
 import org.jspecify.annotations.Nullable;
 
@@ -9,7 +10,7 @@ import org.jspecify.annotations.Nullable;
  * An activity being sent to the Discord client to be displayed on the user's profile.
  *
  * @see ActivityBuilder
- * @see Activity#Activity(ActivityType, String, String, String, String, ActivityStatusDisplayType, ActivityParty, ActivityTimestamps)
+ * @see Activity#Activity(ActivityType, String, String, String, String, ActivityStatusDisplayType, ActivityParty, ActivityTimestamps, ActivityAssets)
  */
 public class Activity {
     @JsonProperty("type")
@@ -36,6 +37,9 @@ public class Activity {
     @JsonProperty("timestamps")
     private final @Nullable ActivityTimestamps timestamps;
 
+    @JsonProperty("assets")
+    private final @Nullable ActivityAssets assets;
+
     /**
      * Initializes a new {@link Activity} instance.
      *
@@ -47,6 +51,7 @@ public class Activity {
      * @param statusDisplayType Controls which field should be shown in the user's status text, see {@link ActivityStatusDisplayType}.
      * @param party             The party attached to this activity.
      * @param timestamps        A pair of timestamps indicating when the activity starts and ends.
+     * @param assets            The assets to display to users in the activity card.
      */
     public Activity(
         final ActivityType type,
@@ -56,7 +61,8 @@ public class Activity {
         final @Nullable String stateUrl,
         final @Nullable ActivityStatusDisplayType statusDisplayType,
         final @Nullable ActivityParty party,
-        final @Nullable ActivityTimestamps timestamps
+        final @Nullable ActivityTimestamps timestamps,
+        final @Nullable ActivityAssets assets
     ) {
         this.type = type;
         this.details = details;
@@ -66,11 +72,12 @@ public class Activity {
         this.statusDisplayType = statusDisplayType;
         this.party = party;
         this.timestamps = timestamps;
+        this.assets = assets;
     }
 
     @JsonCreator
     protected Activity() {
-        this(ActivityType.PLAYING, null, null, null, null, null, null, null);
+        this(ActivityType.PLAYING, null, null, null, null, null, null, null, null);
     }
 
     /**

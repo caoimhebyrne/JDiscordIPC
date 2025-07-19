@@ -20,6 +20,10 @@ public class Main {
                 builder.maximumSize(10);
                 builder.privacy(ActivityPartyPrivacy.PUBLIC);
             })
+            .assets((builder) -> {
+                builder.largeImage("https://placehold.co/500x500/png", "Large Image");
+                builder.smallImage("https://placehold.co/100x100/png", "Small Image");
+            })
             .build();
 
         // If an activity is set before JDiscordIPC is connected, it'll queue the activity to be set once a ready
