@@ -20,6 +20,7 @@ out [Discord's developer documentation](https://discord.com/developers/docs/intr
 class Main {
     public static void main(final String[] args) {
         final JDiscordIPC jDiscordIPC = JDiscordIPC.builder(/* clientId */)
+            // .systemSocketFactory(new LegacySystemSocketFactory()) - if not on Java 16+
             .systemSocketFactory(new ModernSystemSocketFactory())
             .build();
 

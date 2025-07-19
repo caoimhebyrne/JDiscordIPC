@@ -12,6 +12,7 @@ repositories {
 
 dependencies {
     implementation(rootProject)
+    implementation(project(":java-legacy"))
     implementation(project(":java-modern"))
 }
 
