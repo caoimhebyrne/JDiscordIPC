@@ -1,5 +1,7 @@
 package dev.caoimhe.jdiscordipc.activity.model;
 
+import dev.caoimhe.jdiscordipc.activity.model.assets.ActivityAssets;
+import dev.caoimhe.jdiscordipc.activity.model.assets.ActivityAssetsBuilder;
 import dev.caoimhe.jdiscordipc.activity.model.party.ActivityParty;
 import dev.caoimhe.jdiscordipc.activity.model.party.ActivityPartyBuilder;
 import org.jspecify.annotations.Nullable;
@@ -54,6 +56,11 @@ public class ActivityBuilder {
      * A pair of timestamps indicating when the {@link Activity} starts and ends.
      */
     private @Nullable ActivityTimestamps timestamps;
+
+    /**
+     * The assets to display to users in the activity card.
+     */
+    private @Nullable ActivityAssets assets;
 
     /**
      * Initializes a new {@link ActivityBuilder} instance with the following defaults:
@@ -161,6 +168,29 @@ public class ActivityBuilder {
     }
 
     /**
+     * Sets the {@link ActivityAssets} for the built activity.
+     *
+     * @see dev.caoimhe.jdiscordipc.activity.model.assets.ActivityAssetsBuilder
+     */
+    public ActivityBuilder assets(final @Nullable ActivityAssets assets) {
+        this.assets = assets;
+        return this;
+    }
+
+    /**
+     * Sets the {@link ActivityAssets} for the built activity using the builder.
+     *
+     * @param builderConsumer The {@link Consumer} to call to customize the {@link ActivityAssetsBuilder}.
+     */
+    public ActivityBuilder assets(final Consumer<ActivityAssetsBuilder> builderConsumer) {
+        final ActivityAssetsBuilder builder = ActivityAssets.builder();
+        builderConsumer.accept(builder);
+
+        this.assets = builder.build();
+        return this;
+    }
+
+    /**
      * Constructs an {@link Activity} instance with the information contained within this builder.
      */
     public Activity build() {
@@ -173,7 +203,8 @@ public class ActivityBuilder {
             this.stateUrl,
             this.statusDisplayType,
             this.party,
-            this.timestamps
+            this.timestamps,
+            this.assets
         );
     }
 }
