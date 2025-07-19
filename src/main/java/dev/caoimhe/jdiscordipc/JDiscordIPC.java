@@ -4,6 +4,8 @@ import dev.caoimhe.jdiscordipc.activity.ActivityManager;
 import dev.caoimhe.jdiscordipc.activity.model.Activity;
 import dev.caoimhe.jdiscordipc.activity.model.ActivityBuilder;
 import dev.caoimhe.jdiscordipc.builder.JDiscordIPCBuilder;
+import dev.caoimhe.jdiscordipc.packet.PacketHandler;
+import dev.caoimhe.jdiscordipc.packet.PacketManager;
 import dev.caoimhe.jdiscordipc.socket.SystemSocket;
 import dev.caoimhe.jdiscordipc.packet.codec.PacketCodec;
 import dev.caoimhe.jdiscordipc.packet.Packet;
@@ -33,14 +35,14 @@ import java.util.Map;
  *
  * @see dev.caoimhe.jdiscordipc.builder.JDiscordIPCBuilder
  */
-public class JDiscordIPC implements DiscordEventListener {
+public class JDiscordIPC implements DiscordEventListener, PacketHandler {
     private @Nullable Thread backgroundThread;
     private JDiscordIPCState state;
 
     private final ActivityManager activityManager;
     private final long clientId;
     private final List<DiscordEventListener> eventListeners;
-    private final PacketCodec packetCodec;
+    private final PacketManager packetManager;
     private final ReconnectPolicy reconnectPolicy;
     private final SystemSocket systemSocket;
 
@@ -58,7 +60,6 @@ public class JDiscordIPC implements DiscordEventListener {
         final SystemSocket systemSocket
     ) {
         this.clientId = clientId;
-        this.packetCodec = PacketCodec.from(systemSocket);
         this.reconnectPolicy = reconnectPolicy;
         this.state = JDiscordIPCState.DISCONNECTED;
         this.systemSocket = systemSocket;
@@ -68,7 +69,8 @@ public class JDiscordIPC implements DiscordEventListener {
         this.eventListeners = new ArrayList<>();
         this.registerEventListener(this);
 
-        this.activityManager = new ActivityManager(this);
+        this.packetManager = new PacketManager(this, this.systemSocket);
+        this.activityManager = new ActivityManager(this, this.packetManager);
     }
 
     /**
@@ -84,18 +86,11 @@ public class JDiscordIPC implements DiscordEventListener {
             final Path discordIpcPath = this.getIpcFilePath();
             this.systemSocket.connect(discordIpcPath);
 
-            // If an existing thread is already running, let's get rid of it and start a new one.
-            if (this.backgroundThread != null) {
-                this.backgroundThread.interrupt();
-            }
-
-            // Now that we've connected, we can start a background task to start consuming messages from Discord.
-            this.backgroundThread = new Thread(this::readPackets, "JDiscordIPC-Packet-Reading");
-            this.backgroundThread.setDaemon(false);
-            this.backgroundThread.start();
+            // We can now tell the packet manager to start its packet reading thread.
+            this.packetManager.startReadingIncomingPackets();
 
             // To mark the connection as ready, we must send a handshake to the client containing our client ID.
-            this.packetCodec.write(new HandshakePacket(this.clientId));
+            this.packetManager.sendPacket(new HandshakePacket(this.clientId));
         } catch (final IOException e) {
             this.state = JDiscordIPCState.DISCONNECTED;
             throw new JDiscordIPCException.DiscordClientUnavailableException(e);
@@ -134,24 +129,6 @@ public class JDiscordIPC implements DiscordEventListener {
     }
 
     /**
-     * Sends a {@link OutgoingFramePacket} to the Discord client if it is in the ready state.
-     * <p>
-     * If {@link #connect} has not been called, or, the Discord client has terminated the connection, this will not
-     * send anything.
-     */
-    public void sendPacket(final OutgoingFramePacket<?> packet) {
-        if (this.state != JDiscordIPCState.READY) {
-            return;
-        }
-
-        try {
-            this.packetCodec.write(packet);
-        } catch (IOException e) {
-            // TODO
-        }
-    }
-
-    /**
      * Returns the current state of this {@link JDiscordIPC} instance.
      */
     public JDiscordIPCState state() {
@@ -173,69 +150,11 @@ public class JDiscordIPC implements DiscordEventListener {
         return new JDiscordIPCBuilder(clientId);
     }
 
-    /**
-     * Responsible for reading packets from the Discord client and ensuring they get handled.
-     */
-    private void readPackets() {
-        while (this.systemSocket.isConnected()) {
-            // If the current thread has been interrupted, we can just return immediately.
-            if (Thread.currentThread().isInterrupted()) {
-                return;
-            }
-
-            final Packet packet;
-            try {
-                packet = this.packetCodec.read();
-            } catch (final Exception e) {
-                System.err.println("Failed to read packet: " + e);
-                continue;
-            }
-
-            // If a null value is returned, the socket was closed by the other side, we should handle this gracefully.
-            if (packet == null) {
-                break;
-            }
-
-            try {
-                this.handlePacket(packet);
-            } catch (final Exception e) {
-                System.err.println("Failed to handle packet: " + e);
-            }
-        }
-
-        // If the while loop ends, we have been disconnected from the client.
-        this.handleDisconnect();
-    }
-
-    /**
-     * Called when the Discord client terminates the connection (either gracefully or forcefully).
-     */
-    private void handleDisconnect() {
-        this.state = JDiscordIPCState.DISCONNECTED;
-
-        if (this.reconnectPolicy == ReconnectPolicy.NEVER) {
-            System.out.println("The Discord client terminated the connection. Not attempting to reconnect as the reconnect policy is set to never.");
-
-            if (this.backgroundThread != null) {
-                this.backgroundThread.interrupt();
-            }
-        }
-    }
-
-    /**
-     * Handles an incoming packet from the Discord client.
-     *
-     * @param packet The packet to handle.
-     * @see #readPackets
-     */
-    private void handlePacket(final Packet packet) {
+    @Override
+    public void handlePacket(final Packet packet) {
         if (packet instanceof PingPacket) {
-            try {
-                final Map<String, Object> properties = ((PingPacket) packet).properties();
-                this.packetCodec.write(new PongPacket(properties));
-            } catch (final IOException e) {
-                System.err.println("Failed to write pong packet: " + e);
-            }
+            final Map<String, Object> properties = ((PingPacket) packet).properties();
+            this.packetManager.sendPacket(new PongPacket(properties));
         } else if (packet instanceof DispatchEventPacket) {
             final Event event = ((DispatchEventPacket) packet).data();
 
@@ -244,6 +163,16 @@ public class JDiscordIPC implements DiscordEventListener {
             } catch (final Exception e) {
                 System.err.println("Failed to dispatch event to event listeners: " + e);
             }
+        }
+    }
+
+    @Override
+    public void handleEOF() {
+        this.state = JDiscordIPCState.DISCONNECTED;
+
+        if (this.reconnectPolicy == ReconnectPolicy.NEVER) {
+            System.out.println("The Discord client terminated the connection. Not attempting to reconnect as the reconnect policy is set to never.");
+            this.packetManager.stopReadingIncomingPackets();
         }
     }
 
