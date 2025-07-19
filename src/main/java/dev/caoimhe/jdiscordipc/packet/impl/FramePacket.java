@@ -35,6 +35,13 @@ public abstract class FramePacket implements Packet {
         return this.uniqueId;
     }
 
+    /**
+     * Sets the unique ID for this frame packet.
+     */
+    public void setUniqueId(final String uniqueId) {
+        this.uniqueId = uniqueId;
+    }
+
     @Override
     public PacketOpcode opcode() {
         return PacketOpcode.FRAME;

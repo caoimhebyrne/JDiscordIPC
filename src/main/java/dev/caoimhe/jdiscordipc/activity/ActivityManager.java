@@ -80,9 +80,11 @@ public class ActivityManager implements DiscordEventListener {
      * Sends the activity for the current user as a packet to the Discord client.
      */
     private void sendActivityPacket() {
-        this.packetManager.sendPacket(new SetActivityRequestPacket(new SetActivityRequestPacket.Arguments(
+        final SetActivityRequestPacket requestPacket = new SetActivityRequestPacket(new SetActivityRequestPacket.Arguments(
             SystemUtil.getProcessId(),
             this.currentActivity
-        )));
+        ));
+
+        this.packetManager.sendPacket(requestPacket, (response) -> {});
     }
 }

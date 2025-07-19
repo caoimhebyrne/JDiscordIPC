@@ -18,7 +18,7 @@ public class SetActivityRequestPacket extends OutgoingFramePacket<SetActivityReq
      */
     public SetActivityRequestPacket(final Arguments arguments) {
         // SET_ACTIVITY packets require a unique ID to be set.
-        super("SET_ACTIVITY", arguments, UUID.randomUUID().toString());
+        super("SET_ACTIVITY", arguments);
     }
 
     public static class Arguments {
