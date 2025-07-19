@@ -2,14 +2,16 @@ package dev.caoimhe.jdiscordipc.builder;
 
 import dev.caoimhe.jdiscordipc.JDiscordIPC;
 import dev.caoimhe.jdiscordipc.ReconnectPolicy;
-import dev.caoimhe.jdiscordipc.socket.SystemSocketFactory;
 import dev.caoimhe.jdiscordipc.exception.JDiscordIPCBuilderException;
+import dev.caoimhe.jdiscordipc.socket.SystemSocketFactory;
+import dev.caoimhe.jdiscordipc.socket.impl.WindowsSystemSocketFactory;
+import dev.caoimhe.jdiscordipc.util.SystemUtil;
 import org.jspecify.annotations.Nullable;
 
 /**
  * A builder for {@link JDiscordIPC} instances.
  *
- * @see #of
+ * @see JDiscordIPC#builder(long)
  */
 public class JDiscordIPCBuilder {
     /**
@@ -66,10 +68,20 @@ public class JDiscordIPCBuilder {
      *                                                                         is not called.
      */
     public JDiscordIPC build() {
-        if (this.systemSocketFactory == null) {
+        final SystemSocketFactory systemSocketFactory;
+
+        // On Windows, we always need to use the Windows system socket factory, this is not customizable.
+        if (SystemUtil.isWindows()) {
+            systemSocketFactory = new WindowsSystemSocketFactory();
+        } else {
+            systemSocketFactory = this.systemSocketFactory;
+        }
+
+        // If a system socket factory could not be created, we need to throw an exception.
+        if (systemSocketFactory == null) {
             throw new JDiscordIPCBuilderException.MissingSystemSocketFactoryException();
         }
 
-        return new JDiscordIPC(this.clientId, this.reconnectPolicy, this.systemSocketFactory.createSystemSocket());
+        return new JDiscordIPC(this.clientId, this.reconnectPolicy, systemSocketFactory.createSystemSocket());
     }
 }

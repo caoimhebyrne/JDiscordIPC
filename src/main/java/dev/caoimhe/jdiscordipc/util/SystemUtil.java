@@ -5,11 +5,21 @@ import org.jspecify.annotations.Nullable;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 
 public class SystemUtil {
+    private static final String OS_NAME = System.getProperty("os.name");
     private static @Nullable Long cachedProcessId = null;
 
-    private SystemUtil() {}
+    private SystemUtil() {
+    }
+
+    /**
+     * Returns whether the current OS is Windows.
+     */
+    public static boolean isWindows() {
+        return OS_NAME.toLowerCase(Locale.ROOT).startsWith("windows");
+    }
 
     /**
      * Returns the temporary directory used for Discord's unix domain socket.
@@ -30,7 +40,7 @@ public class SystemUtil {
             return Paths.get(temporary);
         }
 
-        throw new IllegalStateException("No XDG_RUNTIME_DIR, TMPDIR or TMP environment variable set!");
+        return Paths.get("/tmp");
     }
 
     /**

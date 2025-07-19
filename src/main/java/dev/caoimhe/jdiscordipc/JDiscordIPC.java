@@ -4,26 +4,25 @@ import dev.caoimhe.jdiscordipc.activity.ActivityManager;
 import dev.caoimhe.jdiscordipc.activity.model.Activity;
 import dev.caoimhe.jdiscordipc.activity.model.ActivityBuilder;
 import dev.caoimhe.jdiscordipc.builder.JDiscordIPCBuilder;
-import dev.caoimhe.jdiscordipc.packet.PacketHandler;
-import dev.caoimhe.jdiscordipc.packet.PacketManager;
-import dev.caoimhe.jdiscordipc.socket.SystemSocket;
-import dev.caoimhe.jdiscordipc.packet.codec.PacketCodec;
-import dev.caoimhe.jdiscordipc.packet.Packet;
-import dev.caoimhe.jdiscordipc.packet.impl.HandshakePacket;
-import dev.caoimhe.jdiscordipc.packet.impl.PingPacket;
-import dev.caoimhe.jdiscordipc.packet.impl.PongPacket;
-import dev.caoimhe.jdiscordipc.packet.impl.frame.OutgoingFramePacket;
-import dev.caoimhe.jdiscordipc.packet.impl.frame.incoming.DispatchEventPacket;
 import dev.caoimhe.jdiscordipc.event.DiscordEventListener;
 import dev.caoimhe.jdiscordipc.event.model.Event;
 import dev.caoimhe.jdiscordipc.event.model.ReadyEvent;
 import dev.caoimhe.jdiscordipc.exception.JDiscordIPCException;
+import dev.caoimhe.jdiscordipc.packet.Packet;
+import dev.caoimhe.jdiscordipc.packet.PacketHandler;
+import dev.caoimhe.jdiscordipc.packet.PacketManager;
+import dev.caoimhe.jdiscordipc.packet.impl.HandshakePacket;
+import dev.caoimhe.jdiscordipc.packet.impl.PingPacket;
+import dev.caoimhe.jdiscordipc.packet.impl.PongPacket;
+import dev.caoimhe.jdiscordipc.packet.impl.frame.incoming.DispatchEventPacket;
+import dev.caoimhe.jdiscordipc.socket.SystemSocket;
 import dev.caoimhe.jdiscordipc.util.SystemUtil;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -182,7 +181,12 @@ public class JDiscordIPC implements DiscordEventListener, PacketHandler {
      * @throws JDiscordIPCException.DiscordClientUnavailableException If a unix domain socket file could not be found.
      */
     private Path getIpcFilePath() throws JDiscordIPCException.DiscordClientUnavailableException {
-        final Path temporaryDirectory = SystemUtil.getTemporaryDirectory();
+        final Path temporaryDirectory;
+        if (SystemUtil.isWindows()) {
+            temporaryDirectory = Paths.get("\\\\?\\pipe\\");
+        } else {
+            temporaryDirectory = SystemUtil.getTemporaryDirectory();
+        }
 
         for (int i = 0; i <= 9; i++) {
             final Path ipcFile = temporaryDirectory.resolve("discord-ipc-" + i);
