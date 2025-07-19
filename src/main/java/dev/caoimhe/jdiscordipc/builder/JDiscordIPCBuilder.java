@@ -29,19 +29,15 @@ public class JDiscordIPCBuilder {
      */
     private @Nullable SystemSocketFactory systemSocketFactory;
 
-    private JDiscordIPCBuilder(final long clientId) {
-        this.clientId = clientId;
-        this.reconnectPolicy = ReconnectPolicy.NEVER;
-        this.systemSocketFactory = null;
-    }
-
     /**
      * Initializes a new {@link JDiscordIPCBuilder}.
      *
      * @param clientId The client ID to use when communicating with Discord.
      */
-    public static JDiscordIPCBuilder of(final long clientId) {
-        return new JDiscordIPCBuilder(clientId);
+    public JDiscordIPCBuilder(final long clientId) {
+        this.clientId = clientId;
+        this.reconnectPolicy = ReconnectPolicy.NEVER;
+        this.systemSocketFactory = null;
     }
 
     /**
