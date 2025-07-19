@@ -1,13 +1,13 @@
 import dev.caoimhe.jdiscordipc.JDiscordIPC;
-import dev.caoimhe.jdiscordipc.builder.JDiscordIPCBuilder;
-import dev.caoimhe.jdiscordipc.exception.JDiscordIPCException;
 import dev.caoimhe.jdiscordipc.activity.model.Activity;
 import dev.caoimhe.jdiscordipc.activity.model.party.ActivityPartyPrivacy;
+import dev.caoimhe.jdiscordipc.exception.JDiscordIPCException;
 import dev.caoimhe.jdiscordipc.modern.core.ModernSystemSocketFactory;
 
 public class Main {
     public static void main(final String[] args) {
         final JDiscordIPC jDiscordIPC = JDiscordIPC.builder(945428344806183003L)
+//            .systemSocketFactory(new LegacySystemSocketFactory())
             .systemSocketFactory(new ModernSystemSocketFactory())
             .build();
 
