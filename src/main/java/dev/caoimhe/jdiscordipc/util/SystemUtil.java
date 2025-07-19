@@ -1,9 +1,14 @@
 package dev.caoimhe.jdiscordipc.util;
 
+import org.jspecify.annotations.Nullable;
+
+import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class SystemUtil {
+    private static @Nullable Long cachedProcessId = null;
+
     private SystemUtil() {}
 
     /**
@@ -26,5 +31,23 @@ public class SystemUtil {
         }
 
         throw new IllegalStateException("No XDG_RUNTIME_DIR, TMPDIR or TMP environment variable set!");
+    }
+
+    /**
+     * Returns the current process identifier for this running JVM.
+     */
+    public static long getProcessId() {
+        // If we've already evaluated the process ID, we can return it, it won't change.
+        if (SystemUtil.cachedProcessId != null) {
+            return SystemUtil.cachedProcessId;
+        }
+
+        // getPid is only available on Java 10 and higher. We are targetting Java 8+.
+        final String processName = ManagementFactory.getRuntimeMXBean().getName();
+        final String processIdString = processName.split("@")[0];
+        final long processId = Long.parseLong(processIdString);
+
+        SystemUtil.cachedProcessId = processId;
+        return processId;
     }
 }
