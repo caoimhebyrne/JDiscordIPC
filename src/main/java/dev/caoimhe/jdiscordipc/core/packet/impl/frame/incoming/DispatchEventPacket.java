@@ -1,19 +1,19 @@
-package dev.caoimhe.jdiscordipc.core.packet.impl.frame;
+package dev.caoimhe.jdiscordipc.core.packet.impl.frame.incoming;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import dev.caoimhe.jdiscordipc.core.packet.impl.FramePacket;
+import dev.caoimhe.jdiscordipc.core.packet.impl.frame.IncomingFramePacket;
 import dev.caoimhe.jdiscordipc.model.event.Event;
 import dev.caoimhe.jdiscordipc.model.event.ReadyEvent;
 
-public class DispatchEventPacket extends FramePacket<Event> {
+public class DispatchEventPacket extends IncomingFramePacket<Event> {
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "evt", visible = true)
     @JsonSubTypes(
         @JsonSubTypes.Type(value = ReadyEvent.class, name = "READY")
     )
     @JsonProperty("data")
-    private Event data;
+    protected Event data;
 
     @Override
     public Event data() {

@@ -9,7 +9,7 @@ import dev.caoimhe.jdiscordipc.core.SystemSocket;
 import dev.caoimhe.jdiscordipc.core.packet.Packet;
 import dev.caoimhe.jdiscordipc.core.packet.PacketOpcode;
 import dev.caoimhe.jdiscordipc.core.packet.impl.ClosePacket;
-import dev.caoimhe.jdiscordipc.core.packet.impl.FramePacket;
+import dev.caoimhe.jdiscordipc.core.packet.impl.frame.IncomingFramePacket;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -107,7 +107,7 @@ public class PacketCodec {
 
         switch (opcode) {
             case FRAME:
-                return this.objectMapper.readValue(payload, FramePacket.class);
+                return this.objectMapper.readValue(payload, IncomingFramePacket.class);
 
             case CLOSE:
                 return this.objectMapper.readValue(payload, ClosePacket.class);
