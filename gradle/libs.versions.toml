@@ -1,0 +1,11 @@
+[versions]
+jackson = "3.0.4"
+jspecify = "1.0.0"
+junit = "6.0.2"
+junixsocket = "2.10.1"
+
+[libraries]
+jackson-databind = { group = "tools.jackson.core", name = "jackson-databind", version.ref = "jackson" }
+jspecify = { group = "org.jspecify", name = "jspecify", version.ref = "jspecify" }
+junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit" }
+junixsocket-core = { group = "com.kohlschutter.junixsocket", name = "junixsocket-core", version.ref = "junixsocket"}

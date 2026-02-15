@@ -11,8 +11,9 @@ repositories {
 }
 
 dependencies {
-    api("com.kohlschutter.junixsocket:junixsocket-core:2.10.1")
-    implementation("org.jspecify:jspecify:1.0.0")
+    api(libs.junixsocket.core)
+
+    implementation(libs.jspecify)
     implementation(rootProject)
 }
 
