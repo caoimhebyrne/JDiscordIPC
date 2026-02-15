@@ -1,6 +1,7 @@
 # JDiscordIPC
 
-> **Note**: JDiscordIPC is in early development. Expect breaking API changes, bugs, and more.
+> [!NOTE]
+> JDiscordIPC is in early development. Expect breaking API changes, bugs, and more.
 
 JDiscordIPC provides a safe and easy to use API for interacting with a running Discord client over the IPC protocol
 (also known as the Game or Social SDK).
@@ -13,8 +14,8 @@ out [Discord's developer documentation](https://discord.com/developers/docs/intr
 
 ## Examples and Wiki
 
-> **Note**: A wiki for JDiscordIPC is coming soon. See an example snippet below, or, check out
-> the [example project](example/src/main/java/Main.java).
+> [!NOTE] 
+> A wiki for JDiscordIPC is coming soon. See an example snippet below, or, check out the [example project](example/src/main/java/Main.java).
 
 ```java
 class Main {
@@ -50,13 +51,15 @@ class Main {
 
 ## Using JDiscordIPC
 
-> **Note**: These artifacts are not published to any repositories yet!
+> [!NOTE]
+> These artifacts are not published to any repositories yet! You can use JitPack if you'd like, but it's not
+> recommended.
 
 To use JDiscordIPC in your project, you need to add the core dependency:
 
 ```kotlin
 dependencies {
-    implementation("dev.caoimhe:jdiscordipc:0.1.0")
+    implementation("dev.caoimhe:jdiscordipc:0.1.0-SNAPSHOT")
 }
 ```
 
@@ -70,10 +73,10 @@ Alongside the dependency to provide the Unix Socket implementation, which depend
 ```kotlin
 dependencies {
     // Java 15 and lower:
-    implementation("dev.caoimhe.jdiscordipc-java-legacy:0.1.0")
+    implementation("dev.caoimhe.jdiscordipc-java-legacy:0.1.0-SNAPSHOT")
 
     // Java 16 and higher:
-    implementation("dev.caoimhe.jdiscordipc-java-modern:0.1.0")
+    implementation("dev.caoimhe.jdiscordipc-java-modern:0.1.0-SNAPSHOT")
 }
 ```
 
