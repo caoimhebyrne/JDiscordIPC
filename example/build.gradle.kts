@@ -1,10 +1,9 @@
 plugins {
     java
-    `java-library`
 }
 
-group = "dev.caoimhe"
-version = "0.1.0"
+group = "dev.caoimhe.example"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
@@ -14,4 +13,10 @@ dependencies {
     implementation(rootProject)
     implementation(project(":java-legacy"))
     implementation(project(":java-modern"))
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(24)
+    }
 }

@@ -66,7 +66,7 @@ public class JDiscordIPC implements DiscordEventListener, PacketHandler {
         // The most important thing is that JDiscordIPC is the first event listener. Its state is important to other
         // event listeners.
         this.eventListeners = new ArrayList<>();
-        this.registerEventListener(this);
+        this.eventListeners.add(this);
 
         this.packetManager = new PacketManager(this, this.systemSocket);
         this.activityManager = new ActivityManager(this, this.packetManager);

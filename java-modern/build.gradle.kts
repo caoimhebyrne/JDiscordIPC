@@ -1,24 +1,12 @@
 plugins {
-    java
-    `java-library`
+    id("library-conventions")
 }
 
-group = "dev.caoimhe"
-version = "0.1.0"
-
-repositories {
-    mavenCentral()
+libraryConventions {
+    // The Java Unix SocketChannel API became available in Java 16.
+    compileTarget = JavaLanguageVersion.of(16)
 }
 
 dependencies {
-    implementation(libs.jspecify)
     implementation(rootProject)
-}
-
-tasks.test {
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_16
-    targetCompatibility = JavaVersion.VERSION_16
 }
