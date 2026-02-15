@@ -2,7 +2,6 @@ package dev.caoimhe.jdiscordipc.packet.impl.frame;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.caoimhe.jdiscordipc.packet.impl.FramePacket;
-import org.jspecify.annotations.Nullable;
 
 /**
  * A frame packet being sent to the Discord client.

@@ -1,11 +1,9 @@
 package dev.caoimhe.jdiscordipc.packet.impl.frame.outgoing;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import dev.caoimhe.jdiscordipc.packet.impl.frame.OutgoingFramePacket;
 import dev.caoimhe.jdiscordipc.activity.model.Activity;
+import dev.caoimhe.jdiscordipc.packet.impl.frame.OutgoingFramePacket;
 import org.jspecify.annotations.Nullable;
-
-import java.util.UUID;
 
 /**
  * Sent to the Discord client as a request to update the user's activity.

@@ -2,19 +2,17 @@ package dev.caoimhe.jdiscordipc.packet.codec;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import dev.caoimhe.jdiscordipc.socket.SystemSocket;
 import dev.caoimhe.jdiscordipc.packet.Packet;
 import dev.caoimhe.jdiscordipc.packet.PacketOpcode;
 import dev.caoimhe.jdiscordipc.packet.impl.ClosePacket;
 import dev.caoimhe.jdiscordipc.packet.impl.PingPacket;
 import dev.caoimhe.jdiscordipc.packet.impl.PongPacket;
 import dev.caoimhe.jdiscordipc.packet.impl.frame.IncomingFramePacket;
+import dev.caoimhe.jdiscordipc.socket.SystemSocket;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -34,9 +32,9 @@ public class PacketCodec {
     private final ByteBuffer headerBuffer;
 
     /**
-     * The {@link ObjectMapper} to use when (de)serializing JSON values.
+     * The {@link JsonMapper} to use when (de)serializing JSON values.
      */
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
 
     private final ReadFunction readFunction;
     private final WriteFunction writeFunction;
@@ -52,15 +50,13 @@ public class PacketCodec {
         this.headerBuffer = ByteBuffer.allocate(HEADER_SIZE_BYTES);
         this.headerBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
-        this.objectMapper = new ObjectMapper();
-
-        this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        this.objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        this.objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, true);
-        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        this.objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES, true);
-        this.objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-        this.objectMapper.configure(JsonParser.Feature.INCLUDE_SOURCE_IN_LOCATION, true);
+        this.jsonMapper = JsonMapper.builder()
+            .enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES)
+            .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .changeDefaultPropertyInclusion(value -> value.withValueInclusion(JsonInclude.Include.NON_NULL))
+            .changeDefaultVisibility(value -> value.withFieldVisibility(JsonAutoDetect.Visibility.ANY))
+            .build();
 
         this.readFunction = readFunction;
         this.writeFunction = writeFunction;
@@ -113,16 +109,16 @@ public class PacketCodec {
 
         switch (opcode) {
             case FRAME:
-                return this.objectMapper.readValue(payload, IncomingFramePacket.class);
+                return this.jsonMapper.readValue(payload, IncomingFramePacket.class);
 
             case CLOSE:
-                return this.objectMapper.readValue(payload, ClosePacket.class);
+                return this.jsonMapper.readValue(payload, ClosePacket.class);
 
             case PING:
-                return this.objectMapper.readValue(payload, PingPacket.class);
+                return this.jsonMapper.readValue(payload, PingPacket.class);
 
             case PONG:
-                return this.objectMapper.readValue(payload, PongPacket.class);
+                return this.jsonMapper.readValue(payload, PongPacket.class);
 
             default:
                 throw new IllegalStateException("Unsupported packet opcode " + opcode);
@@ -134,7 +130,7 @@ public class PacketCodec {
      */
     public void write(final Packet packet) throws IOException {
         // In order to allocate a buffer, we need to know how much data to allocate.
-        final byte[] payloadBytes = this.objectMapper.writeValueAsBytes(packet);
+        final byte[] payloadBytes = this.jsonMapper.writeValueAsBytes(packet);
 
         final ByteBuffer buffer = ByteBuffer.allocate(HEADER_SIZE_BYTES + payloadBytes.length);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
