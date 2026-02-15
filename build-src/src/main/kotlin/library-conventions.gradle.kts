@@ -12,10 +12,11 @@ extension.compileTarget.convention(JavaLanguageVersion.of(8))
 plugins {
     java
     `java-library`
+    `maven-publish`
 }
 
 group = "dev.caoimhe"
-version = "0.1.0"
+version = "0.1.0-SNAPSHOT"
 
 // If this is the root project, then we don't need to add a classifier to the archives name.
 base.archivesName =  if (project == rootProject) {
@@ -29,8 +30,56 @@ repositories {
 }
 
 java {
+    withSourcesJar()
+    withJavadocJar()
+
     toolchain {
         languageVersion = JavaLanguageVersion.of(24)
+    }
+}
+
+val mavenPublishingUsernameProvider = providers.environmentVariable("MAVEN_PUBLISHING_USERNAME")
+val mavenPublishingPasswordProvider = providers.environmentVariable("MAVEN_PUBLISHING_PASSWORD")
+
+publishing {
+    repositories {
+        maven {
+            name = "maven-central-snapshots"
+            url = uri("https://central.sonatype.com/repository/maven-snapshots")
+
+            val mavenPublishingUsername = mavenPublishingUsernameProvider.orNull
+            val mavenPublishingPassword = mavenPublishingPasswordProvider.orNull
+
+            if (mavenPublishingUsername != null && mavenPublishingPassword != null) {
+                credentials {
+                    username = mavenPublishingUsername
+                    password = mavenPublishingPassword
+                }
+            } else {
+                println("Not configuring maven publishing credentials as MAVEN_PUBLISHING environment variables were not set!")
+            }
+        }
+    }
+
+    publications {
+        create<MavenPublication>("maven") {
+            artifactId = base.archivesName.get()
+
+            from(components["java"])
+
+            pom {
+                name = "JDiscordIPC"
+                description = "A Java library for interacting with Discord via IPC (a.k.a. RPC, Game SDK, Social SDK, etc.)"
+                url = "https://github.com/caoimhebyrne/JDiscordIPC"
+
+                licenses {
+                    license {
+                        name = "MIT"
+                        url = "https://opensource.org/licenses/MIT"
+                    }
+                }
+            }
+        }
     }
 }
 
