@@ -76,12 +76,24 @@ public class JDiscordIPC implements DiscordEventListener, PacketHandler {
      * This method will block until the connection is initiated, but not until it is ready (see {@link ReadyEvent}).
      *
      * @throws JDiscordIPCException.DiscordClientUnavailableException When the connection could not be initiated.
+     * @see JDiscordIPC#connect(ConnectOptions)
      */
     public void connect() throws JDiscordIPCException.DiscordClientUnavailableException {
+        this.connect(ConnectOptions.builder().build());
+    }
+
+    /**
+     * Connects to the running Discord application through the {@link SystemSocket} provided during initialization.
+     * This method will block until the connection is initiated, but not until it is ready (see {@link ReadyEvent}).
+     *
+     * @throws JDiscordIPCException.DiscordClientUnavailableException When the connection could not be initiated.
+     * @see ConnectOptions
+     */
+    public void connect(final ConnectOptions options) throws JDiscordIPCException.DiscordClientUnavailableException {
         try {
             this.state = JDiscordIPCState.CONNECTING;
 
-            final Path discordIpcPath = this.getIpcFilePath();
+            final Path discordIpcPath = this.getIpcFilePath(options);
             this.systemSocket.connect(discordIpcPath);
 
             // We can now tell the packet manager to start its packet reading thread.
@@ -177,14 +189,30 @@ public class JDiscordIPC implements DiscordEventListener, PacketHandler {
     /**
      * Attempts to find a Unix Domain Socket File to connect to the Discord client.
      *
-     * @throws JDiscordIPCException.DiscordClientUnavailableException If a unix domain socket file could not be found.
+     * @throws JDiscordIPCException.DiscordClientUnavailableException If a Unix domain socket file could not be found.
      */
-    private Path getIpcFilePath() throws JDiscordIPCException.DiscordClientUnavailableException {
+    private Path getIpcFilePath(final ConnectOptions options) throws JDiscordIPCException.DiscordClientUnavailableException {
         final Path temporaryDirectory;
-        if (SystemUtil.isWindows()) {
+        final Path temporaryDirectoryOverride = options.temporaryDirectory();
+
+        if (temporaryDirectoryOverride != null) {
+            temporaryDirectory = temporaryDirectoryOverride;
+        } else if (SystemUtil.isWindows()) {
             temporaryDirectory = Paths.get("\\\\.\\pipe\\");
         } else {
             temporaryDirectory = SystemUtil.getTemporaryDirectory();
+        }
+
+        // TODO: De-duplicate the code below!
+
+        final Integer socketIndexOverride = options.socketIndex();
+        if (socketIndexOverride != null) {
+            final Path ipcFile = temporaryDirectory.resolve("discord-ipc-" + socketIndexOverride);
+            if (Files.exists(ipcFile)) {
+                return ipcFile;
+            }
+
+            throw new JDiscordIPCException.DiscordClientUnavailableException(null);
         }
 
         for (int i = 0; i <= 9; i++) {
