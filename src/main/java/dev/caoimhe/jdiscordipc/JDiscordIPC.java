@@ -183,7 +183,7 @@ public class JDiscordIPC implements DiscordEventListener, PacketHandler {
     private Path getIpcFilePath() throws JDiscordIPCException.DiscordClientUnavailableException {
         final Path temporaryDirectory;
         if (SystemUtil.isWindows()) {
-            temporaryDirectory = Paths.get("\\\\?\\pipe\\");
+            temporaryDirectory = Paths.get("\\\\.\\pipe\\");
         } else {
             temporaryDirectory = SystemUtil.getTemporaryDirectory();
         }
