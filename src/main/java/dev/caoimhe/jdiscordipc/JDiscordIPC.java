@@ -35,7 +35,6 @@ import java.util.Map;
  * @see dev.caoimhe.jdiscordipc.builder.JDiscordIPCBuilder
  */
 public class JDiscordIPC implements DiscordEventListener, PacketHandler {
-    private @Nullable Thread backgroundThread;
     private JDiscordIPCState state;
 
     private final ActivityManager activityManager;
