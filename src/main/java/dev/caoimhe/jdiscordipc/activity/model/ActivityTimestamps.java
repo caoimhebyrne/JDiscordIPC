@@ -1,7 +1,5 @@
 package dev.caoimhe.jdiscordipc.activity.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
@@ -13,17 +11,14 @@ import java.time.Instant;
  * to display a time progress bar on the user's profile.
  */
 public class ActivityTimestamps {
-    @JsonProperty("start")
     private final Long start;
-
-    @JsonProperty("end")
     private final @Nullable Long end;
 
     /**
      * Initializes a new {@link ActivityTimestamps} instance from a starting now.
      */
     public static ActivityTimestamps indefiniteFromNow() {
-        return ActivityTimestamps.from(Instant.now());
+        return ActivityTimestamps.indefiniteFrom(Instant.now());
     }
 
     /**
@@ -31,7 +26,7 @@ public class ActivityTimestamps {
      *
      * @param start The {@link Instant} that the activity started at.
      */
-    public static ActivityTimestamps from(final Instant start) {
+    public static ActivityTimestamps indefiniteFrom(final Instant start) {
         return ActivityTimestamps.from(start, null);
     }
 
@@ -56,9 +51,17 @@ public class ActivityTimestamps {
         this.end = end;
     }
 
-    @JsonCreator
-    protected ActivityTimestamps(final @JsonProperty("start") long start) {
-        this.start = start;
-        this.end = null;
+    /**
+     * The Unix timestamp that this {@link Activity} started at.
+     */
+    public Long start() {
+        return this.start;
+    }
+
+    /**
+     * The Unix timestamp that this {@link Activity} ended at.
+     */
+    public @Nullable Long end() {
+        return this.end;
     }
 }

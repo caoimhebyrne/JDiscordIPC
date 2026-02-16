@@ -85,6 +85,7 @@ publishing {
 
 // The project must be compiled with whatever compatibility was requested by the project. This is Java 8 by default.
 tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.add("-parameters")
     options.release = extension.compileTarget.get().asInt()
 }
 

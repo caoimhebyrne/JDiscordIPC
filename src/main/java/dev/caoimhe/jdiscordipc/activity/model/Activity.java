@@ -1,6 +1,5 @@
 package dev.caoimhe.jdiscordipc.activity.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.caoimhe.jdiscordipc.activity.model.assets.ActivityAssets;
 import dev.caoimhe.jdiscordipc.activity.model.party.ActivityParty;
@@ -13,31 +12,22 @@ import org.jspecify.annotations.Nullable;
  * @see Activity#Activity(ActivityType, String, String, String, String, ActivityStatusDisplayType, ActivityParty, ActivityTimestamps, ActivityAssets)
  */
 public class Activity {
-    @JsonProperty("type")
     private final ActivityType type;
 
-    @JsonProperty("details")
     private final @Nullable String details;
 
-    @JsonProperty("details_url")
     private final @Nullable String detailsUrl;
 
-    @JsonProperty("state")
     private final @Nullable String state;
 
-    @JsonProperty("state_url")
     private final @Nullable String stateUrl;
 
-    @JsonProperty("status_display_type")
     private final @Nullable ActivityStatusDisplayType statusDisplayType;
 
-    @JsonProperty("party")
     private final @Nullable ActivityParty party;
 
-    @JsonProperty("timestamps")
     private final @Nullable ActivityTimestamps timestamps;
 
-    @JsonProperty("assets")
     private final @Nullable ActivityAssets assets;
 
     /**
@@ -54,7 +44,7 @@ public class Activity {
      * @param assets            The assets to display to users in the activity card.
      */
     public Activity(
-        final ActivityType type,
+        final @JsonProperty(required = true) ActivityType type,
         final @Nullable String details,
         final @Nullable String detailsUrl,
         final @Nullable String state,
@@ -73,11 +63,6 @@ public class Activity {
         this.party = party;
         this.timestamps = timestamps;
         this.assets = assets;
-    }
-
-    @JsonCreator
-    protected Activity() {
-        this(ActivityType.PLAYING, null, null, null, null, null, null, null, null);
     }
 
     /**

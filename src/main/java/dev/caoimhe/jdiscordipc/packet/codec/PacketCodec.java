@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import dev.caoimhe.jdiscordipc.packet.Packet;
 import dev.caoimhe.jdiscordipc.packet.PacketOpcode;
 import dev.caoimhe.jdiscordipc.packet.impl.ClosePacket;
@@ -52,9 +53,14 @@ public class PacketCodec {
         this.headerBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
         this.jsonMapper = JsonMapper.builder()
-            .enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES)
+            .addModule(new ParameterNamesModule())
+            .enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+            .disable(
+                DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+                DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES,
+                DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES
+            )
             .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .defaultPropertyInclusion(JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.NON_NULL))
             .visibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
             .build();

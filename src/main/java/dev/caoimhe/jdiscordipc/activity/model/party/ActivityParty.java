@@ -42,7 +42,10 @@ public class ActivityParty {
     }
 
     @JsonCreator
-    protected ActivityParty(final @JsonProperty("id") String id, final @JsonProperty("size") int[] size) {
+    protected ActivityParty(
+        final @JsonProperty(value = "id", required = true) String id,
+        final @JsonProperty(value = "size", required = true) int[] size
+    ) {
         this.id = id;
         this.size = size;
         this.privacy = ActivityPartyPrivacy.PRIVATE;
