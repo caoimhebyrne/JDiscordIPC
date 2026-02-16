@@ -2,6 +2,10 @@ package dev.caoimhe.jdiscordipc.packet.codec;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import dev.caoimhe.jdiscordipc.packet.Packet;
 import dev.caoimhe.jdiscordipc.packet.PacketOpcode;
 import dev.caoimhe.jdiscordipc.packet.impl.ClosePacket;
@@ -10,9 +14,6 @@ import dev.caoimhe.jdiscordipc.packet.impl.PongPacket;
 import dev.caoimhe.jdiscordipc.packet.impl.frame.IncomingFramePacket;
 import dev.caoimhe.jdiscordipc.socket.SystemSocket;
 import org.jspecify.annotations.Nullable;
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.SerializationFeature;
-import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -54,8 +55,8 @@ public class PacketCodec {
             .enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES)
             .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .changeDefaultPropertyInclusion(value -> value.withValueInclusion(JsonInclude.Include.NON_NULL))
-            .changeDefaultVisibility(value -> value.withFieldVisibility(JsonAutoDetect.Visibility.ANY))
+            .defaultPropertyInclusion(JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.NON_NULL))
+            .visibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
             .build();
 
         this.readFunction = readFunction;
