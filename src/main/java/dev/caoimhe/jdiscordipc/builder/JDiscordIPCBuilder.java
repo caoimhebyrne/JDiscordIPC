@@ -52,6 +52,9 @@ public class JDiscordIPCBuilder {
 
     /**
      * Sets the {@link SystemSocketFactory} implementation to use when building the {@link JDiscordIPC} instance.
+     * <p>
+     * The provided {@link SystemSocketFactory} instance is only used on Unix operating systems. On Windows,
+     * {@link WindowsSystemSocketFactory} will always be used regardless of whether this method is called.
      *
      * @see SystemSocketFactory
      */
