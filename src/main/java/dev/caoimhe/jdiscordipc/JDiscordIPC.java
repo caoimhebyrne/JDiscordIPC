@@ -16,8 +16,8 @@ import dev.caoimhe.jdiscordipc.packet.impl.PingPacket;
 import dev.caoimhe.jdiscordipc.packet.impl.PongPacket;
 import dev.caoimhe.jdiscordipc.packet.impl.frame.incoming.DispatchEventPacket;
 import dev.caoimhe.jdiscordipc.socket.SystemSocket;
-import dev.caoimhe.jdiscordipc.util.CollectionsUtil;
-import dev.caoimhe.jdiscordipc.util.SystemUtil;
+import dev.caoimhe.jdiscordipc.internal.util.CollectionsUtil;
+import dev.caoimhe.jdiscordipc.internal.util.SystemUtil;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;

@@ -8,7 +8,7 @@ import dev.caoimhe.jdiscordipc.event.DiscordEventListener;
 import dev.caoimhe.jdiscordipc.event.model.ReadyEvent;
 import dev.caoimhe.jdiscordipc.packet.PacketManager;
 import dev.caoimhe.jdiscordipc.packet.impl.frame.outgoing.SetActivityRequestPacket;
-import dev.caoimhe.jdiscordipc.util.SystemUtil;
+import dev.caoimhe.jdiscordipc.internal.util.SystemUtil;
 import org.jspecify.annotations.Nullable;
 
 /**

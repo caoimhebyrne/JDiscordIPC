@@ -1,4 +1,4 @@
-package dev.caoimhe.jdiscordipc.util;
+package dev.caoimhe.jdiscordipc.internal.util;
 
 import java.util.Arrays;
 import java.util.Collections;

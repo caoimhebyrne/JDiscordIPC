@@ -5,7 +5,7 @@ import dev.caoimhe.jdiscordipc.ReconnectPolicy;
 import dev.caoimhe.jdiscordipc.exception.JDiscordIPCBuilderException;
 import dev.caoimhe.jdiscordipc.socket.SystemSocketFactory;
 import dev.caoimhe.jdiscordipc.socket.impl.WindowsSystemSocketFactory;
-import dev.caoimhe.jdiscordipc.util.SystemUtil;
+import dev.caoimhe.jdiscordipc.internal.util.SystemUtil;
 import org.jspecify.annotations.Nullable;
 
 /**
