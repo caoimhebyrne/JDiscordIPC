@@ -16,6 +16,7 @@ import dev.caoimhe.jdiscordipc.packet.impl.PingPacket;
 import dev.caoimhe.jdiscordipc.packet.impl.PongPacket;
 import dev.caoimhe.jdiscordipc.packet.impl.frame.incoming.DispatchEventPacket;
 import dev.caoimhe.jdiscordipc.socket.SystemSocket;
+import dev.caoimhe.jdiscordipc.util.CollectionsUtil;
 import dev.caoimhe.jdiscordipc.util.SystemUtil;
 import org.jspecify.annotations.Nullable;
 
@@ -26,6 +27,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * The main entrypoint for JDiscordIPC.
@@ -35,6 +39,21 @@ import java.util.Map;
  * @see dev.caoimhe.jdiscordipc.builder.JDiscordIPCBuilder
  */
 public class JDiscordIPC implements DiscordEventListener, PacketHandler {
+    /**
+     * A set of paths within the temporary directory that the Discord IPC socket may be located in. These cover common
+     * packaging systems for Discord like Flatpak and Snap.
+     */
+    private static final Set<String> EXTRA_DISCORD_TEMP_PATHS = CollectionsUtil.setOf(
+        // Flatpak
+        "app/com.discordapp.Discord",
+        "app/com.discordapp.DiscordCanary",
+
+        // Snap
+        "snap.discord",
+        "snap.discord-canary",
+        "snap.discord-ptb"
+    );
+
     private JDiscordIPCState state;
 
     private final ActivityManager activityManager;
@@ -187,7 +206,13 @@ public class JDiscordIPC implements DiscordEventListener, PacketHandler {
     }
 
     /**
-     * Attempts to find a Unix Domain Socket File to connect to the Discord client.
+     * Attempts to find a Unix domain socket file to connect to the Discord client in the system's temporary directory.
+     * <p>
+     * If {@link ConnectOptions#socketIndex()} is non-null, then that socket index will be used. Otherwise, socket
+     * indices 0 through 9 will be checked.
+     * <p>
+     * If {@link ConnectOptions#temporaryDirectory()} is non-null, then it will be used instead of guessing the system's
+     * temporary directory via {@link SystemUtil#getTemporaryDirectory()}.
      *
      * @throws JDiscordIPCException.DiscordClientUnavailableException If a Unix domain socket file could not be found.
      */
@@ -203,8 +228,43 @@ public class JDiscordIPC implements DiscordEventListener, PacketHandler {
             temporaryDirectory = SystemUtil.getTemporaryDirectory();
         }
 
-        // TODO: De-duplicate the code below!
+        // The socket may be in the root of the temporary directory. Or, there are some subdirectories of the
+        // temporary directory that it could be in (only on Unix).
+        final Stream<Path> possibleParents;
+        if (SystemUtil.isWindows()) {
+            possibleParents = Stream.of(temporaryDirectory);
+        } else {
+            possibleParents = Stream.concat(
+                Stream.of(temporaryDirectory),
+                EXTRA_DISCORD_TEMP_PATHS.stream().map(temporaryDirectory::resolve)
+            );
+        }
 
+        final Path ipcFilePath = possibleParents
+            .map(it -> this.getIpcFilePath(options, it))
+            .filter(Objects::nonNull)
+            .findFirst()
+            .orElse(null);
+
+        if (ipcFilePath != null) {
+            return ipcFilePath;
+        }
+
+        throw new JDiscordIPCException.DiscordClientUnavailableException(null);
+    }
+
+    /**
+     * Attempts to find a Unix domain socket file to connect to the Discord client in the provided temporary
+     * directory.
+     * <p>
+     * If {@link ConnectOptions#socketIndex()} is non-null, then that socket index will be used. Otherwise, socket
+     * indices 0 through 9 will be checked.
+     *
+     * @param options            The {@link ConnectOptions} to consider.
+     * @param temporaryDirectory The path to the temporary directory to check.
+     * @return The path if it exists, otherwise null.
+     */
+    private @Nullable Path getIpcFilePath(final ConnectOptions options, final Path temporaryDirectory) {
         final Integer socketIndexOverride = options.socketIndex();
         if (socketIndexOverride != null) {
             final Path ipcFile = temporaryDirectory.resolve("discord-ipc-" + socketIndexOverride);
@@ -212,7 +272,7 @@ public class JDiscordIPC implements DiscordEventListener, PacketHandler {
                 return ipcFile;
             }
 
-            throw new JDiscordIPCException.DiscordClientUnavailableException(null);
+            return null;
         }
 
         for (int i = 0; i <= 9; i++) {
@@ -222,6 +282,6 @@ public class JDiscordIPC implements DiscordEventListener, PacketHandler {
             }
         }
 
-        throw new JDiscordIPCException.DiscordClientUnavailableException(null);
+        return null;
     }
 }
